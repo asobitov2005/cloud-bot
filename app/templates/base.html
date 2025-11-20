@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrimeLingo Admin</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-robot"></i> PrimeLingo</h2>
+                <p>Admin Panel</p>
+            </div>
+            <div class="sidebar-nav">
+                <a href="/admin/dashboard"
+                    class="nav-item {% if request.url.path == '/admin/dashboard' %}active{% endif %}">
+                    <span><i class="fas fa-chart-line"></i></span> Dashboard
+                </a>
+                <a href="/admin/files" class="nav-item {% if request.url.path == '/admin/files' %}active{% endif %}">
+                    <span><i class="fas fa-folder-open"></i></span> Files
+                </a>
+                <a href="/admin/users" class="nav-item {% if request.url.path == '/admin/users' %}active{% endif %}">
+                    <span><i class="fas fa-users"></i></span> Users
+                </a>
+                <a href="/admin/logout" class="nav-item">
+                    <span><i class="fas fa-sign-out-alt"></i></span> Logout
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script src="/static/js/admin.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

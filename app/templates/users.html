@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block users_active %}active{% endblock %}
+{% block page_title %}Users Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search users..." />
+        <button onclick="searchUsers()"><i class="fas fa-search"></i> Search</button>
+    </div>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Telegram ID</th>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Language</th>
+                <th>Joined</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="usersTableBody">
+            <tr>
+                <td colspan="9" class="text-center">Loading...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentUsers = [];
+
+    async function loadUsers() {
+        try {
+            const res = await fetch('/admin/api/users', {
+                credentials: 'same-origin'
+            });
+            if (!res.ok) await handleApiError(res);
+            const data = await res.json();
+            currentUsers = data.users;
+            renderUsers(currentUsers);
+        } catch (error) {
+            console.error('Error loading users:', error);
+        }
+    }
+
+    function renderUsers(users) {
+        const tbody = document.getElementById('usersTableBody');
+
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center">No users found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = users.map(user => `
+            <tr>
+                <td>${user.id}</td>
+                <td>${user.telegram_id}</td>
+                <td>@${user.username || 'N/A'}</td>
+                <td>${user.full_name || 'Unknown'}</td>
+                <td>${user.language.toUpperCase()}</td>
+                <td>${new Date(user.joined_at).toLocaleDateString()}</td>
+                <td>
+                    ${user.is_primary_admin ?
+                '<span class="badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;"><i class="fas fa-crown"></i> Super Admin</span>' :
+                user.is_admin ?
+                    '<span class="badge" style="background: #667eea; color: white;"><i class="fas fa-shield-alt"></i> Admin</span>' :
+                    '<span class="badge badge-secondary"><i class="fas fa-user"></i> User</span>'
+            }
+                </td>
+                <td>
+                    ${user.is_blocked ?
+                '<span class="badge badge-danger"><i class="fas fa-lock"></i> Blocked</span>' :
+                '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Active</span>'
+            }
+                </td>
+                <td style="white-space: nowrap;">
+                    ${user.is_blocked ?
+                `<button class="btn btn-sm btn-success" onclick="unblockUser(${user.id})"><i class="fas fa-unlock"></i> Unblock</button>` :
+                `<button class="btn btn-sm btn-danger" onclick="blockUser(${user.id})"><i class="fas fa-ban"></i> Block</button>`
+            }
+                    ${!user.is_primary_admin ?
+                (user.is_admin ?
+                    `<button class="btn btn-sm btn-warning" onclick="removeAdmin(${user.id})" style="margin-left: 5px;"><i class="fas fa-user-minus"></i> Remove Admin</button>` :
+                    `<button class="btn btn-sm btn-primary" onclick="makeAdmin(${user.id})" style="margin-left: 5px;"><i class="fas fa-user-shield"></i> Make Admin</button>`) :
+                ''
+            }
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function searchUsers() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = currentUsers.filter(u =>
+            (u.username && u.username.toLowerCase().includes(query)) ||
+            (u.full_name && u.full_name.toLowerCase().includes(query)) ||
+            u.telegram_id.toString().includes(query)
+        );
+        renderUsers(filtered);
+    }
+
+    async function blockUser(userId) {
+        if (!confirm('Are you sure you want to block this user?')) return;
+
+        try {
+            const res = await fetch(`/admin/api/users/${userId}/block`, {
+                method: 'POST',
+                credentials: 'same-origin'
+            });
+            if (!res.ok) await handleApiError(res);
+
+            loadUsers();
+            alert('User blocked successfully!');
+        } catch (error) {
+            console.error('Error blocking user:', error);
+            alert('Error blocking user');
+        }
+    }
+
+    async function unblockUser(userId) {
+        try {
+            const res = await fetch(`/admin/api/users/${userId}/unblock`, {
+                method: 'POST',
+                credentials: 'same-origin'
+            });
+            if (!res.ok) await handleApiError(res);
+
+            loadUsers();
+            alert('User unblocked successfully!');
+        } catch (error) {
+            console.error('Error unblocking user:', error);
+            alert('Error unblocking user');
+        }
+    }
+
+    async function makeAdmin(userId) {
+        if (!confirm('Are you sure you want to make this user an admin?')) return;
+
+        try {
+            const res = await fetch(`/admin/api/users/${userId}/make-admin`, {
+                method: 'POST',
+                credentials: 'same-origin'
+            });
+            if (!res.ok) await handleApiError(res);
+
+            loadUsers();
+            showNotification('User promoted to admin successfully!', 'success');
+        } catch (error) {
+            console.error('Error making user admin:', error);
+            showNotification('Error promoting user to admin', 'error');
+        }
+    }
+
+    async function removeAdmin(userId) {
+        if (!confirm('Are you sure you want to remove admin rights from this user?')) return;
+
+        try {
+            const res = await fetch(`/admin/api/users/${userId}/remove-admin`, {
+                method: 'POST',
+                credentials: 'same-origin'
+            });
+            if (!res.ok) await handleApiError(res);
+
+            loadUsers();
+            showNotification('Admin rights removed successfully!', 'success');
+        } catch (error) {
+            console.error('Error removing admin rights:', error);
+            showNotification('Error removing admin rights', 'error');
+        }
+    }
+
+    loadUsers();
+</script>
+{% endblock %}

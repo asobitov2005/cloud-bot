@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block files_active %}active{% endblock %}
+{% block page_title %}Files Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search files..." />
+        <button onclick="searchFiles()">🔍 Search</button>
+    </div>
+    <div class="filter-box">
+        <select id="fileTypeFilter" onchange="loadFiles()">
+            <option value="regular">Regular Files</option>
+            <option value="mock_test">Mock Tests</option>
+        </select>
+    </div>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Level</th>
+                <th>Type</th>
+                <th>Downloads</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="filesTableBody">
+            <tr>
+                <td colspan="7" class="text-center">Loading...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditModal()">&times;</span>
+        <h2>Edit File</h2>
+        <form id="editForm" onsubmit="updateFile(event)">
+            <input type="hidden" id="editFileId" />
+
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="editTitle" required />
+            </div>
+
+            <div class="form-group">
+                <label>Level</label>
+                <input type="text" id="editLevel" />
+            </div>
+
+            <div class="form-group">
+                <label>Tags</label>
+                <input type="text" id="editTags" />
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="editDescription" rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>File Type</label>
+                <select id="editFileType">
+                    <option value="regular">Regular</option>
+                    <option value="mock_test">Mock Test</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentFiles = [];
+
+    async function loadFiles() {
+        const fileType = document.getElementById('fileTypeFilter').value;
+
+        try {
+            const res = await fetch(`/admin/api/files?file_type=${fileType}`, {
+                credentials: 'same-origin'
+            });
+            if (!res.ok) await handleApiError(res);
+            const data = await res.json();
+            currentFiles = data.files;
+            renderFiles(currentFiles);
+        } catch (error) {
+            console.error('Error loading files:', error);
+        }
+    }
+
+    function renderFiles(files) {
+        const tbody = document.getElementById('filesTableBody');
+
+        if (files.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">No files found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = files.map(file => `
+            <tr>
+                <td>${file.id}</td>
+                <td>${file.title}</td>
+                <td>${file.level || '-'}</td>
+                <td>${file.file_type}</td>
+                <td>${file.downloads_count}</td>
+                <td>${new Date(file.created_at).toLocaleDateString()}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editFile(${file.id})"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteFile(${file.id})"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function searchFiles() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = currentFiles.filter(f =>
+            f.title.toLowerCase().includes(query)
+        );
+        renderFiles(filtered);
+    }
+
+    async function editFile(fileId) {
+        try {
+            const res = await fetch(`/admin/api/files/${fileId}`, {
+                credentials: 'same-origin'
+            });
+            if (!res.ok) await handleApiError(res);
+            const file = await res.json();
+
+            document.getElementById('editFileId').value = file.id;
+            document.getElementById('editTitle').value = file.title;
+            document.getElementById('editLevel').value = file.level || '';
+            document.getElementById('editTags').value = file.tags || '';
+            document.getElementById('editDescription').value = file.description || '';
+            document.getElementById('editFileType').value = file.file_type;
+
+            document.getElementById('editModal').style.display = 'block';
+        } catch (error) {
+            console.error('Error loading file:', error);
+        }
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    async function updateFile(event) {
+        event.preventDefault();
+        const fileId = document.getElementById('editFileId').value;
+
+        const formData = new FormData();
+        formData.append('title', document.getElementById('editTitle').value);
+        formData.append('level', document.getElementById('editLevel').value);
+        formData.append('tags', document.getElementById('editTags').value);
+        formData.append('description', document.getElementById('editDescription').value);
+        formData.append('file_type', document.getElementById('editFileType').value);
+
+        try {
+            const res = await fetch(`/admin/api/files/${fileId}`, {
+                method: 'PUT',
+                credentials: 'same-origin',
+                body: formData
+            });
+            if (!res.ok) await handleApiError(res);
+
+            closeEditModal();
+            loadFiles();
+            alert('File updated successfully!');
+        } catch (error) {
+            console.error('Error updating file:', error);
+            alert('Error updating file');
+        }
+    }
+
+    async function deleteFile(fileId) {
+        if (!confirm('Are you sure you want to delete this file?')) return;
+
+        try {
+            const res = await fetch(`/admin/api/files/${fileId}`, {
+                method: 'DELETE',
+                credentials: 'same-origin'
+            });
+            if (!res.ok) await handleApiError(res);
+
+            loadFiles();
+            alert('File deleted successfully!');
+        } catch (error) {
+            console.error('Error deleting file:', error);
+            alert('Error deleting file');
+        }
+    }
+
+    loadFiles();
+</script>
+{% endblock %}

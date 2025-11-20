@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block dashboard_active %}active{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>Dashboard</h1>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-users text-white"></i>
+        </div>
+        <div class="stat-info">
+            <h3 id="total-users">-</h3>
+            <p>Total Users</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-file-alt text-white"></i>
+        </div>
+        <div class="stat-info">
+            <h3 id="total-files">-</h3>
+            <p>Total Files</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-download text-white"></i>
+        </div>
+        <div class="stat-info">
+            <h3 id="total-downloads">-</h3>
+            <p>Total Downloads</p>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="charts-grid">
+    <div class="chart-card">
+        <h3><i class="fas fa-chart-area"></i> Downloads Over Time</h3>
+        <canvas id="downloadsChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <h3><i class="fas fa-trophy"></i> Top Files</h3>
+        <canvas id="topFilesChart"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Fetch dashboard data
+    async function loadDashboardData() {
+        try {
+            const response = await fetch('/admin/api/stats', {
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) await handleApiError(response);
+
+            const data = await response.json();
+
+            // Update stats
+            document.getElementById('total-users').textContent = formatNumber(data.total_users);
+            document.getElementById('total-files').textContent = formatNumber(data.total_files);
+            document.getElementById('total-downloads').textContent = formatNumber(data.total_downloads);
+
+            // Render charts
+            renderDownloadsChart(data.downloads_chart);
+            renderTopFilesChart(data.top_files);
+
+        } catch (error) {
+            console.error('Error loading dashboard data:', error);
+            showNotification('Error loading dashboard data', 'error');
+        }
+    }
+
+    function renderDownloadsChart(data) {
+        const ctx = document.getElementById('downloadsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Downloads',
+                    data: data.values,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            borderDash: [2, 4]
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderTopFilesChart(data) {
+        const ctx = document.getElementById('topFilesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(item => item.title.substring(0, 20) + '...'),
+                datasets: [{
+                    label: 'Downloads',
+                    data: data.map(item => item.downloads),
+                    backgroundColor: [
+                        '#667eea', '#764ba2', '#10b981', '#f59e0b', '#ef4444'
+                    ],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            borderDash: [2, 4]
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Load data on page load
+    document.addEventListener('DOMContentLoaded', loadDashboardData);
+</script>
+{% endblock %}

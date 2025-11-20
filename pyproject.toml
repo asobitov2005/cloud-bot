@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "cloud-bot"
+version = "0.1.0"
+description = "Telegram bot for file management with Web Admin Panel"
+authors = ["Azizbek <azizbek@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.109.0"
+uvicorn = "^0.27.0"
+aiogram = "^3.3.0"
+sqlalchemy = "^2.0.0"
+alembic = "^1.13.0"
+pydantic-settings = "^2.1.0"
+asyncpg = "^0.29.0"
+python-multipart = "^0.0.6"
+jinja2 = "^3.1.0"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+aiofiles = "^23.2.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.1.0"
+isort = "^5.13.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

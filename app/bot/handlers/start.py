@@ -28,18 +28,28 @@ async def cmd_start(message: Message, db_user, lang: str, db: AsyncSession):
         import logging
         logging.getLogger(__name__).warning(f"Failed to update commands: {e}")
     
-    # If user already has language, show main menu
-    if db_user.language and db_user.language != "uz":
-        await message.answer(
-            get_text("welcome", lang),
-            reply_markup=get_main_menu_keyboard(lang)
-        )
-    else:
-        # Show language selection
-        await message.answer(
-            get_text("welcome", "uz"),
-            reply_markup=get_language_keyboard()
-        )
+    # Always show main menu on /start
+    # If user wants to change language, they can use the button
+    await message.answer(
+        get_text("welcome", lang),
+        reply_markup=get_main_menu_keyboard(lang)
+    )
+
+
+@router.message(F.text.in_([
+    "🌐 Tilni o'zgartirish", "🌐 Change Language", "🌐 Изменить язык"
+]))
+async def cmd_change_language(message: Message):
+    """Handle change language button"""
+    # We don't know the language here easily without db_user, but we can default to uz or try to get it
+    # Actually, we can get lang from middleware if we add it to arguments
+    # But for now let's just show it in English or multi-language?
+    # The buttons are multi-language anyway.
+    # Let's just use a generic message or "uz" default.
+    await message.answer(
+        get_text("select_language", "uz"), 
+        reply_markup=get_language_keyboard()
+    )
 
 
 @router.message(F.text.in_(["🇺🇿 O'zbekcha", "🇬🇧 English", "🇷🇺 Русский"]))

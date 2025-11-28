@@ -10,6 +10,9 @@ from app.core.config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Global bot and dp instances
+bot: Bot = None
+dp: Dispatcher = None
 
 async def set_bot_commands(bot: Bot):
     """Set default bot commands for regular users"""
@@ -24,7 +27,6 @@ async def set_bot_commands(bot: Bot):
     # Set default commands for all users
     await bot.set_my_commands(user_commands)
     logger.info("Default user commands set")
-
 
 
 async def on_startup(bot: Bot):
@@ -89,9 +91,10 @@ async def update_user_commands(telegram_id: int, is_admin: bool):
         logger.error(f"Failed to update commands for user {telegram_id}: {e}")
 
 
-
 async def main():
     """Main function to run the bot"""
+    global bot, dp
+    
     # Initialize bot
     bot, dp = init_bot()
     
@@ -102,9 +105,13 @@ async def main():
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
     
-    # Start polling
+    # Start polling WITHOUT signal handling (parent process will handle)
     logger.info("Starting bot polling...")
-    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+    await dp.start_polling(
+        bot, 
+        allowed_updates=dp.resolve_used_update_types(),
+        handle_signals=False  # Important! Let parent handle signals
+    )
 
 
 if __name__ == "__main__":

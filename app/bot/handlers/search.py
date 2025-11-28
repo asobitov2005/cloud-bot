@@ -39,7 +39,7 @@ async def process_search(message: Message, state: FSMContext, lang: str, db: Asy
         return
     
     # Search files
-    files = await search_files(db, query, file_type="regular", skip=0, limit=5)
+    files = await search_files(db, query, file_type=None, skip=0, limit=5)
     
     if not files:
         await message.answer(get_text("no_results", lang))
@@ -84,13 +84,25 @@ async def send_search_results(message: Message, files: list, page: int,
         if file.tags:
             text += f"\n🏷 {file.tags}"
         
+        
         # Send with thumbnail if available
         keyboard = get_file_actions_keyboard(file.id, lang)
         
-        if file.thumbnail_id:
+        # Get appropriate thumbnail (file's own or default if ≤20MB)
+        from app.bot.helpers import get_thumbnail_for_file
+        from app.bot.main import _bot_instance
+        
+        thumbnail_to_use = await get_thumbnail_for_file(
+            _bot_instance, 
+            file.file_id, 
+            file.thumbnail_id, 
+            db
+        )
+        
+        if thumbnail_to_use:
             try:
                 await message.answer_photo(
-                    photo=file.thumbnail_id,
+                    photo=thumbnail_to_use,
                     caption=text,
                     reply_markup=keyboard,
                     parse_mode="HTML"

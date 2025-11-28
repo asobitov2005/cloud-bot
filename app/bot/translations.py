@@ -4,9 +4,14 @@
 TRANSLATIONS = {
     # Start and language selection
     "welcome": {
-        "uz": "Assalomu alaykum! PrimeLingoBot'ga xush kelibsiz! 🎓\n\nIltimos, tilni tanlang:",
-        "en": "Hello! Welcome to PrimeLingoBot! 🎓\n\nPlease select your language:",
-        "ru": "Здравствуйте! Добро пожаловать в PrimeLingoBot! 🎓\n\nПожалуйста, выберите язык:"
+        "uz": "Assalomu alaykum! PrimeLingoBot'ga xush kelibsiz! 🎓\n\nQuyidagi bo'limlardan birini tanlang:",
+        "en": "Hello! Welcome to PrimeLingoBot! 🎓\n\nPlease select an option:",
+        "ru": "Здравствуйте! Добро пожаловать в PrimeLingoBot! 🎓\n\nПожалуйста, выберите опцию:"
+    },
+    "select_language": {
+        "uz": "Iltimos, tilni tanlang:",
+        "en": "Please select your language:",
+        "ru": "Пожалуйста, выберите язык:"
     },
     "language_selected": {
         "uz": "Til tanlandi: O'zbekcha ✅",
@@ -30,15 +35,15 @@ TRANSLATIONS = {
         "en": "⭐️ My List",
         "ru": "⭐️ Мой список"
     },
-    "btn_mock_tests": {
-        "uz": "📝 Mock testlar",
-        "en": "📝 Mock tests",
-        "ru": "📝 Пробные тесты"
-    },
     "btn_help": {
         "uz": "❓ Yordam",
         "en": "❓ Help",
         "ru": "❓ Помощь"
+    },
+    "btn_change_language": {
+        "uz": "🌐 Tilni o'zgartirish",
+        "en": "🌐 Change Language",
+        "ru": "🌐 Изменить язык"
     },
     
     # Search flow
@@ -122,18 +127,6 @@ TRANSLATIONS = {
         "uz": "❌ Saqlangan fayllar yo'q.",
         "en": "❌ No saved files.",
         "ru": "❌ Нет сохраненных файлов."
-    },
-    
-    # Mock tests
-    "mock_tests_title": {
-        "uz": "📝 Mock testlar:",
-        "en": "📝 Mock tests:",
-        "ru": "📝 Пробные тесты:"
-    },
-    "no_mock_tests": {
-        "uz": "❌ Hozircha mock testlar mavjud emas.",
-        "en": "❌ No mock tests available yet.",
-        "ru": "❌ Пробные тесты пока недоступны."
     },
     
     # Help
@@ -311,6 +304,23 @@ PrimeLingoBot - бот для поиска и загрузки книг и ма�
         "uz": "❌ Siz bloklangansiz. Admin bilan bog'laning.",
         "en": "❌ You are blocked. Contact the admin.",
         "ru": "❌ Вы заблокированы. Свяжитесь с админом."
+    },
+    
+    # Settings
+    "send_default_thumbnail": {
+        "uz": "🖼 Standart thumbnail rasmini yuboring:",
+        "en": "🖼 Send default thumbnail image:",
+        "ru": "🖼 Отправьте стандартное изображение миниатюры:"
+    },
+    "default_thumbnail_set": {
+        "uz": "✅ Standart thumbnail o'rnatildi!",
+        "en": "✅ Default thumbnail set!",
+        "ru": "✅ Стандартная миниатюра установлена!"
+    },
+    "default_thumbnail_deleted": {
+        "uz": "✅ Standart thumbnail o'chirildi.",
+        "en": "✅ Default thumbnail deleted.",
+        "ru": "✅ Стандартная миниатюра удалена."
     }
 }
 

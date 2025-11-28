@@ -3,6 +3,7 @@ from sqlalchemy import select, func, desc, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta
 from app.models.base import User, File, Download, SavedList
+from app.models.settings import Settings
 
 
 # ==================== USER CRUD ====================
@@ -121,24 +122,27 @@ async def is_user_admin(db: AsyncSession, telegram_id: int,
 
 # ==================== FILE CRUD ====================
 
-async def create_file(db: AsyncSession, file_id: str, title: str, file_type: str = "regular",
-                     type: str = "document", level: str = None, tags: str = None,
-                     description: str = None, thumbnail_id: str = None) -> File:
+async def create_file(db: AsyncSession, file_id: str, title: str, 
+                      file_type: str = "regular", type: str = "document",
+                      level: str = None, tags: str = None, 
+                      description: str = None, thumbnail_id: str = None,
+                      file_name: str = None) -> File:
     """Create new file"""
-    file = File(
+    db_file = File(
         file_id=file_id,
         title=title,
-        type=type,
         file_type=file_type,
+        type=type,
         level=level,
         tags=tags,
         description=description,
-        thumbnail_id=thumbnail_id
+        thumbnail_id=thumbnail_id,
+        file_name=file_name
     )
-    db.add(file)
+    db.add(db_file)
     await db.commit()
-    await db.refresh(file)
-    return file
+    await db.refresh(db_file)
+    return db_file
 
 
 async def get_file_by_id(db: AsyncSession, file_id: int) -> Optional[File]:
@@ -153,25 +157,30 @@ async def get_file_by_telegram_file_id(db: AsyncSession, telegram_file_id: str) 
     return result.scalar_one_or_none()
 
 
-async def search_files(db: AsyncSession, query: str, file_type: str = "regular",
+async def search_files(db: AsyncSession, query: str, file_type: str = None,
                       skip: int = 0, limit: int = 5) -> List[File]:
     """Search files by title (case-insensitive)"""
-    search_query = select(File).where(
-        and_(
-            File.file_type == file_type,
-            File.title.ilike(f"%{query}%")
-        )
-    ).offset(skip).limit(limit).order_by(desc(File.created_at))
+    conditions = [File.title.ilike(f"%{query}%")]
+    
+    if file_type:
+        conditions.append(File.file_type == file_type)
+        
+    search_query = select(File).where(and_(*conditions))\
+        .offset(skip).limit(limit).order_by(desc(File.created_at))
     
     result = await db.execute(search_query)
     return result.scalars().all()
 
 
-async def get_all_files(db: AsyncSession, file_type: str = "regular",
+async def get_all_files(db: AsyncSession, file_type: str = None,
                        skip: int = 0, limit: int = 50) -> List[File]:
     """Get all files with pagination"""
-    query = select(File).where(File.file_type == file_type)\
-        .offset(skip).limit(limit).order_by(desc(File.created_at))
+    query = select(File)
+    
+    if file_type:
+        query = query.where(File.file_type == file_type)
+        
+    query = query.offset(skip).limit(limit).order_by(desc(File.created_at))
     result = await db.execute(query)
     return result.scalars().all()
 
@@ -338,3 +347,40 @@ async def get_user_growth(db: AsyncSession, days: int = 30) -> List[Dict[str, An
     
     result = await db.execute(query)
     return [{"date": str(row.date), "count": row.count} for row in result]
+
+
+# ==================== SETTINGS CRUD ====================
+
+async def get_setting(db: AsyncSession, key: str) -> Optional[str]:
+    """Get setting value by key"""
+    result = await db.execute(select(Settings).where(Settings.key == key))
+    setting = result.scalar_one_or_none()
+    return setting.value if setting else None
+
+
+async def set_setting(db: AsyncSession, key: str, value: str) -> Settings:
+    """Set setting value"""
+    result = await db.execute(select(Settings).where(Settings.key == key))
+    setting = result.scalar_one_or_none()
+    
+    if setting:
+        setting.value = value
+    else:
+        setting = Settings(key=key, value=value)
+        db.add(setting)
+    
+    await db.commit()
+    await db.refresh(setting)
+    return setting
+
+
+async def delete_setting(db: AsyncSession, key: str) -> bool:
+    """Delete setting"""
+    result = await db.execute(select(Settings).where(Settings.key == key))
+    setting = result.scalar_one_or_none()
+    
+    if setting:
+        await db.delete(setting)
+        await db.commit()
+        return True
+    return False

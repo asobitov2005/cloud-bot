@@ -51,4 +51,4 @@ class UserCheckMiddleware(BaseMiddleware):
             data["db_user"] = db_user
             data["db"] = db
         
-        return await handler(event, data)
+            return await handler(event, data)

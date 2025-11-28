@@ -138,16 +138,27 @@ async def handle_get_file_command(message: Message, lang: str, db: AsyncSession)
     caption = f"📚 <b>{file.title}</b>\n"
     if file.description:
         caption += f"\n{file.description}\n"
-        
+    
     keyboard = get_file_actions_keyboard(file.id, lang, show_remove=True)
     
-    if file.thumbnail_id:
-        await message.answer_photo(file.thumbnail_id, caption=caption, reply_markup=keyboard, parse_mode="HTML")
+    # Get appropriate thumbnail (file's own or default if ≤20MB)
+    from app.bot.helpers import get_thumbnail_for_file
+    from app.bot.main import _bot_instance
+    
+    thumbnail_to_use = await get_thumbnail_for_file(
+        _bot_instance, 
+        file.file_id, 
+        file.thumbnail_id, 
+        db
+    )
+    
+    if thumbnail_to_use:
+        await message.answer_photo(thumbnail_to_use, caption=caption, reply_markup=keyboard, parse_mode="HTML")
     else:
         await message.answer(caption, reply_markup=keyboard, parse_mode="HTML")
     
-    # Send actual file
-    await message.answer_document(file.file_id)
+    # Send actual file - REMOVED as per user request (user can click download button)
+    # await message.answer_document(file.file_id)
 
 
 @router.message(F.text.regexp(r"^/del_(\d+)$"))

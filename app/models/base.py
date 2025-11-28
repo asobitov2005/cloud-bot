@@ -24,6 +24,7 @@ class File(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     file_id = Column(String, unique=True, nullable=False)  # Telegram file_id
+    file_name = Column(String, nullable=True) # Original filename
     title = Column(String, index=True, nullable=False)
     type = Column(String, default="document") # document, audio, etc.
     file_type = Column(String, default="regular", index=True) # regular or mock_test

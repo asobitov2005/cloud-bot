@@ -6,8 +6,8 @@ from app.bot.middlewares.language import LanguageMiddleware
 from app.bot.middlewares.admin_check import AdminCheckMiddleware
 
 # Import handlers
-from app.bot.handlers import start, search, downloads, saved_list, mock_tests, help
-from app.bot.handlers.admin import upload, delete, stats, users, broadcast
+from app.bot.handlers import start, search, downloads, saved_list, help
+from app.bot.handlers.admin import upload, delete, stats, users, broadcast, settings as admin_settings
 
 
 # Initialize bot and dispatcher
@@ -34,7 +34,7 @@ def setup_routers():
     dp.include_router(search.router)
     dp.include_router(downloads.router)
     dp.include_router(saved_list.router)
-    dp.include_router(mock_tests.router)
+
     dp.include_router(help.router)
     
     # Admin handlers (with admin check middleware)
@@ -43,12 +43,14 @@ def setup_routers():
     stats.router.message.middleware(AdminCheckMiddleware())
     users.router.message.middleware(AdminCheckMiddleware())
     broadcast.router.message.middleware(AdminCheckMiddleware())
+    admin_settings.router.message.middleware(AdminCheckMiddleware())
     
     dp.include_router(upload.router)
     dp.include_router(delete.router)
     dp.include_router(stats.router)
     dp.include_router(users.router)
     dp.include_router(broadcast.router)
+    dp.include_router(admin_settings.router)
 
 
 def init_bot():

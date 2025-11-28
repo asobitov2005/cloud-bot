@@ -70,13 +70,25 @@ async def show_my_downloads(message: Message, lang: str, db: AsyncSession, db_us
         
         text += f"📅 {download.downloaded_at.strftime('%Y-%m-%d %H:%M')}"
         
+        
         # Send with actions
         keyboard = get_file_actions_keyboard(file.id, lang)
         
-        if file.thumbnail_id:
+        # Get appropriate thumbnail (file's own or default if ≤20MB)
+        from app.bot.helpers import get_thumbnail_for_file
+        from app.bot.main import _bot_instance
+        
+        thumbnail_to_use = await get_thumbnail_for_file(
+            _bot_instance, 
+            file.file_id, 
+            file.thumbnail_id, 
+            db
+        )
+        
+        if thumbnail_to_use:
             try:
                 await message.answer_photo(
-                    photo=file.thumbnail_id,
+                    photo=thumbnail_to_use,
                     caption=text,
                     reply_markup=keyboard,
                     parse_mode="HTML"

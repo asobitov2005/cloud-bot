@@ -26,7 +26,7 @@ async def get_files(
     skip: int = 0,
     limit: int = 50,
     search: str = None,
-    file_type: str = "regular",
+    file_type: str = None,
     db: AsyncSession = Depends(get_db),
     token: dict = Depends(verify_token)
 ):

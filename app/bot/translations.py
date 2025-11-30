@@ -58,9 +58,9 @@ TRANSLATIONS = {
         "ru": "🔍 Результаты поиска:"
     },
     "searching": {
-        "uz": "🔍 Qidirilmoqda.....",
-        "en": "🔍 Searching.....",
-        "ru": "🔍 Поиск....."
+        "uz": "<i>🔍 Qidirilmoqda.....</i>",
+        "en": "<i>🔍 Searching.....</i>",
+        "ru": "<i>🔍 Поиск.....</i>"
     },
     "search_result_for": {
         "uz": "Qidiruv so'rovi: ☞ {query}",

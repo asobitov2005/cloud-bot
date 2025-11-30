@@ -62,8 +62,8 @@ async def process_search(message: Message, state: FSMContext, lang: str, db: Asy
         await message.answer(get_text("enter_search_query", lang), parse_mode="HTML")
         return
     
-    # Send searching message
-    searching_msg = await message.answer(get_text("searching", lang))
+    # Send searching message (in italic)
+    searching_msg = await message.answer(get_text("searching", lang), parse_mode="HTML")
     start_time = time.time()
     
     # Search files - get all results (no limit for pagination)

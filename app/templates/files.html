@@ -9,12 +9,6 @@
         <input type="text" id="searchInput" placeholder="Search files..." oninput="searchFiles()" />
         <!-- <i class="fas fa-search" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i> -->
     </div>
-    <div class="filter-box">
-        <select id="fileTypeFilter" onchange="loadFiles()">
-            <option value="regular">Regular Files</option>
-
-        </select>
-    </div>
 </div>
 
 <div class="table-container">
@@ -31,7 +25,7 @@
         </thead>
         <tbody id="filesTableBody">
             <tr>
-                <td colspan="6" class="text-center">Loading...</td>
+                <td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i> Loading...</td>
             </tr>
         </tbody>
     </table>
@@ -42,12 +36,12 @@
 {% block scripts %}
 <script>
     let currentFiles = [];
+    let searchTimeout;
+    let searchingMessage = null;
 
     async function loadFiles() {
-        const fileType = document.getElementById('fileTypeFilter').value;
-
         try {
-            const res = await fetch(`/admin/api/files?file_type=${fileType}`, {
+            const res = await fetch(`/admin/api/files`, {
                 credentials: 'same-origin'
             });
             if (!res.ok) await handleApiError(res);
@@ -61,6 +55,12 @@
 
     function renderFiles(files) {
         const tbody = document.getElementById('filesTableBody');
+        
+        // Remove searching message if it exists
+        if (searchingMessage) {
+            searchingMessage.remove();
+            searchingMessage = null;
+        }
 
         if (files.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center">No files found</td></tr>';
@@ -82,18 +82,47 @@
     }
 
     // Debounced search function
-    let searchTimeout;
     function searchFiles() {
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            if (query === '') {
-                renderFiles(currentFiles);
-                return;
+        
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        
+        // Show searching message if there's a query
+        if (query !== '') {
+            // Remove previous searching message if exists
+            if (searchingMessage) {
+                searchingMessage.remove();
             }
+            
+            // Create and show searching message
+            const tbody = document.getElementById('filesTableBody');
+            searchingMessage = document.createElement('tr');
+            searchingMessage.id = 'searchingMessage';
+            searchingMessage.innerHTML = `<td colspan="6" class="text-center" style="font-style: italic; color: #6b7280; padding: 2rem;"><i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Qidirilmoqda.....</td>`;
+            tbody.innerHTML = '';
+            tbody.appendChild(searchingMessage);
+        } else {
+            // Clear searching message if query is empty
+            if (searchingMessage) {
+                searchingMessage.remove();
+                searchingMessage = null;
+            }
+            renderFiles(currentFiles);
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
             const filtered = currentFiles.filter(f =>
                 f.title.toLowerCase().includes(query)
             );
+            
+            // Remove searching message
+            if (searchingMessage) {
+                searchingMessage.remove();
+                searchingMessage = null;
+            }
+            
+            // Render results
             renderFiles(filtered);
         }, 300); // 300ms debounce
     }

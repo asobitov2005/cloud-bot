@@ -6,6 +6,7 @@ from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.bot.translations import get_text
 from app.bot.keyboards.inline import get_file_actions_keyboard, get_pagination_keyboard, get_search_results_keyboard
+from app.bot.helpers import safe_answer_callback
 from app.models.crud import search_files, get_file_by_id
 import math
 import time
@@ -116,21 +117,24 @@ async def process_search(message: Message, state: FSMContext, lang: str, db: Asy
 @router.callback_query(F.data.startswith("search_file:"))
 async def handle_search_file(callback: CallbackQuery, lang: str, db: AsyncSession):
     """Handle when user clicks on a search result file"""
+    # Answer callback IMMEDIATELY to prevent expiration
+    # This stops the button loading animation right away
+    await safe_answer_callback(callback)
+    
     try:
         file_id = int(callback.data.split(":")[1])
     except (ValueError, IndexError):
-        await callback.answer(get_text("delete_not_found", lang), show_alert=True)
+        # Query already answered, just send error message
+        await callback.message.answer(get_text("delete_not_found", lang))
         return
     
-    # Get file
+    # Get file (this may take time, but callback is already answered)
     file = await get_file_by_id(db, file_id)
     
     if not file:
-        await callback.answer(get_text("delete_not_found", lang), show_alert=True)
+        # Query already answered, just send error message
+        await callback.message.answer(get_text("delete_not_found", lang))
         return
-    
-    # Answer callback to stop button animation
-    await callback.answer()
     
     # Build file info text
     text = f"<b>{file.title}</b>\n"
@@ -154,16 +158,20 @@ async def handle_search_file(callback: CallbackQuery, lang: str, db: AsyncSessio
 @router.callback_query(F.data.startswith("search_page:"))
 async def handle_search_pagination(callback: CallbackQuery, lang: str, db: AsyncSession):
     """Handle search results pagination"""
+    # Answer callback IMMEDIATELY to prevent expiration
+    await safe_answer_callback(callback)
+    
     try:
         page = int(callback.data.split(":")[1])
     except (ValueError, IndexError):
-        await callback.answer()
+        # Query already answered, just return
         return
     
     # Get search cache
     user_id = callback.from_user.id
     if user_id not in search_cache:
-        await callback.answer(get_text("no_results", lang), show_alert=True)
+        # Query already answered, show alert via message instead
+        await callback.message.answer(get_text("no_results", lang))
         return
     
     cache_data = search_cache[user_id]
@@ -197,15 +205,17 @@ async def handle_search_pagination(callback: CallbackQuery, lang: str, db: Async
             reply_markup=keyboard,
             parse_mode="HTML"
         )
-        await callback.answer()
+        # Callback already answered at the start
     except Exception as e:
-        await callback.answer(get_text("no_results", lang), show_alert=True)
+        logger.error(f"Error handling search pagination: {e}", exc_info=True)
+        # Query already answered, show error via message
+        await callback.message.answer(get_text("no_results", lang))
 
 
 @router.callback_query(F.data == "search_page_info")
 async def handle_search_page_info(callback: CallbackQuery):
     """Handle search page info click (no action needed)"""
-    await callback.answer()
+    await safe_answer_callback(callback)
 
 
 async def send_search_results(message: Message, files: list, page: int, 

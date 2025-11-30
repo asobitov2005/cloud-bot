@@ -4,6 +4,7 @@ from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.bot.translations import get_text
 from app.bot.keyboards.inline import get_file_actions_keyboard, get_pagination_keyboard
+from app.bot.helpers import safe_answer_callback
 from app.models.crud import (
     add_to_saved_list, remove_from_saved_list, get_user_saved_files,
     get_file_by_id
@@ -17,34 +18,48 @@ router = Router()
 @router.callback_query(F.data.startswith("save:"))
 async def handle_save_to_list(callback: CallbackQuery, lang: str, db: AsyncSession, db_user):
     """Handle save to list button press"""
-    file_id = int(callback.data.split(":")[1])
+    try:
+        file_id = int(callback.data.split(":")[1])
+    except (ValueError, IndexError):
+        await safe_answer_callback(callback, get_text("delete_not_found", lang), show_alert=True)
+        return
     
-    # Add to saved list
+    # Add to saved list (quick operation, should complete before callback expires)
     saved = await add_to_saved_list(db, db_user.id, file_id)
     
+    # Answer callback with alert AFTER we know the result
     if saved:
-        await callback.answer(get_text("file_saved", lang), show_alert=True)
+        # Show success alert
+        await safe_answer_callback(callback, get_text("file_saved", lang), show_alert=True)
     else:
-        await callback.answer(get_text("already_saved", lang), show_alert=True)
+        # Show already saved alert
+        await safe_answer_callback(callback, get_text("already_saved", lang), show_alert=True)
 
 
 @router.callback_query(F.data.startswith("remove:"))
 async def handle_remove_from_list(callback: CallbackQuery, lang: str, db: AsyncSession, db_user):
     """Handle remove from list button press"""
-    file_id = int(callback.data.split(":")[1])
+    try:
+        file_id = int(callback.data.split(":")[1])
+    except (ValueError, IndexError):
+        await safe_answer_callback(callback, "🚫 Error", show_alert=True)
+        return
     
-    # Remove from saved list
+    # Remove from saved list first (quick operation)
     removed = await remove_from_saved_list(db, db_user.id, file_id)
     
+    # Answer callback with alert AFTER we know the result
     if removed:
-        await callback.answer(get_text("file_removed", lang), show_alert=True)
+        # Answer callback first to stop loading animation
+        await safe_answer_callback(callback, get_text("file_removed", lang), show_alert=True)
         # Delete the message
         try:
             await callback.message.delete()
         except:
             pass
     else:
-        await callback.answer("🚫 Error", show_alert=True)
+        # Show error alert
+        await safe_answer_callback(callback, "🚫 Error", show_alert=True)
 
 
 @router.message(Command("saved"))

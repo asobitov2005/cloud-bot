@@ -2,10 +2,8 @@
 Health check and error tracking models
 """
 from sqlalchemy import Column, Integer, String, DateTime, Text
-from sqlalchemy.orm import declarative_base
 from datetime import datetime
-
-Base = declarative_base()
+from app.models.base import Base  # Use shared Base from base.py
 
 class HealthCheck(Base):
     __tablename__ = "health_checks"

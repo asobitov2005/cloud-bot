@@ -34,6 +34,13 @@ async def on_startup(bot: Bot):
     logger.info("Initializing database...")
     await init_db()
     
+    # Upgrade FSM storage to Redis if available
+    try:
+        from app.bot import upgrade_storage_to_redis
+        await upgrade_storage_to_redis()
+    except Exception as e:
+        logger.warning(f"Could not upgrade storage: {e}")
+    
     logger.info("Setting bot commands...")
     await set_bot_commands(bot)
     
@@ -97,7 +104,7 @@ async def update_user_commands(telegram_id: int, is_admin: bool):
 
 
 async def main():
-    """Main function to run the bot"""
+    """Main function to run the bot with optimized polling"""
     global bot, dp
     
     # Initialize bot
@@ -110,11 +117,18 @@ async def main():
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
     
-    # Start polling WITHOUT signal handling (parent process will handle)
-    logger.info("Starting bot polling...")
-    await dp.start_polling(
-        bot, 
-        allowed_updates=dp.resolve_used_update_types(),
+    # Import optimized polling function
+    from app.bot.polling import start_polling_optimized
+    from app.core.config import settings
+    
+    # Start optimized polling with automatic reconnection
+    logger.info("Starting bot with optimized polling configuration...")
+    logger.info(f"Polling timeout: {settings.POLLING_TIMEOUT}s, "
+               f"API timeout: {settings.API_REQUEST_TIMEOUT}s")
+    
+    await start_polling_optimized(
+        bot=bot,
+        dp=dp,
         handle_signals=False  # Important! Let parent handle signals
     )
 

@@ -1,56 +1,81 @@
-"""Helper functions for bot operations"""
-from aiogram import Bot
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.crud import get_setting
+"""
+Helper functions for bot operations
+"""
+from aiogram.types import CallbackQuery
+from aiogram.exceptions import TelegramBadRequest
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def format_file_size(size_bytes: int) -> str:
-    """Format file size in human-readable format"""
-    if not size_bytes:
-        return "0 B"
-    
-    for unit in ['B', 'KB', 'MB', 'GB']:
-        if size_bytes < 1024.0:
-            if unit == 'B':
-                return f"{int(size_bytes)} {unit}"
-            return f"{size_bytes:.1f} {unit}"
-        size_bytes /= 1024.0
-    return f"{size_bytes:.1f} TB"
-
-
-async def get_thumbnail_for_file(bot: Bot, file_id: str, current_thumbnail: str, db: AsyncSession) -> str:
     """
-    Get thumbnail for a file. Returns current thumbnail if exists, 
-    otherwise returns default thumbnail if file is ≤20MB.
+    Format file size in bytes to human-readable format
     
     Args:
-        bot: Bot instance
-        file_id: Telegram file_id of the file
-        current_thumbnail: Current thumbnail_id from database
-        db: Database session
-        
+        size_bytes: File size in bytes
+    
     Returns:
-        Thumbnail file_id or None
+        Formatted string (e.g., "1.5 MB", "500 KB")
     """
-    # If file already has a thumbnail, use it
-    if current_thumbnail:
-        return current_thumbnail
+    if size_bytes == 0:
+        return "0 B"
     
-    # Get default thumbnail from settings
-    default_thumbnail = await get_setting(db, "default_thumbnail_id")
-    if not default_thumbnail:
-        return None
+    units = ["B", "KB", "MB", "GB", "TB"]
+    unit_index = 0
+    size = float(size_bytes)
     
-    # Check file size
+    while size >= 1024 and unit_index < len(units) - 1:
+        size /= 1024
+        unit_index += 1
+    
+    # Format with appropriate decimal places
+    if unit_index == 0:
+        return f"{int(size)} {units[unit_index]}"
+    elif size < 10:
+        return f"{size:.2f} {units[unit_index]}"
+    elif size < 100:
+        return f"{size:.1f} {units[unit_index]}"
+    else:
+        return f"{int(size)} {units[unit_index]}"
+
+
+async def safe_answer_callback(callback: CallbackQuery, text: str = None, show_alert: bool = False) -> bool:
+    """
+    Safely answer a callback query, handling expired queries gracefully.
+    
+    Telegram callback queries expire after ~10 seconds. This function:
+    - Answers immediately if possible
+    - Catches and logs expired query errors without raising
+    - Returns True if answered successfully, False if expired
+    
+    Args:
+        callback: CallbackQuery instance
+        text: Optional text to show in answer
+        show_alert: Whether to show as alert
+    
+    Returns:
+        True if answered successfully, False if query expired
+    """
     try:
-        file_info = await bot.get_file(file_id)
-        file_size_mb = file_info.file_size / (1024 * 1024) if file_info.file_size else 0
-        
-        # Only apply default thumbnail if file is 20MB or less
-        if file_size_mb <= 20:
-            return default_thumbnail
-    except Exception:
-        # If we can't get file info, don't apply default thumbnail
-        pass
-    
-    return None
+        if text:
+            await callback.answer(text, show_alert=show_alert)
+        else:
+            await callback.answer()
+        return True
+    except TelegramBadRequest as e:
+        # Check if it's the "query is too old" error
+        error_message = str(e).lower()
+        if "query is too old" in error_message or "query id is invalid" in error_message:
+            logger.debug(
+                f"Callback query expired for user {callback.from_user.id}, "
+                f"query_id: {callback.id}. This is normal for slow operations."
+            )
+            return False
+        else:
+            # Re-raise other TelegramBadRequest errors
+            raise
+    except Exception as e:
+        # Log other errors but don't raise (to prevent breaking the handler)
+        logger.warning(f"Error answering callback query: {e}")
+        return False

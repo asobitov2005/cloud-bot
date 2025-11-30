@@ -30,26 +30,43 @@ async def get_files(
     db: AsyncSession = Depends(get_db),
     token: dict = Depends(verify_token)
 ):
-    """Get files list"""
+    """Get files list with file sizes"""
     if search:
         files = await search_files(db, search, file_type=file_type, skip=skip, limit=limit)
     else:
         files = await get_all_files(db, file_type=file_type, skip=skip, limit=limit)
     
-    return {
-        "files": [
-            {
-                "id": f.id,
-                "title": f.title,
-                "level": f.level,
-                "tags": f.tags,
-                "file_type": f.file_type,
-                "downloads_count": f.downloads_count,
-                "created_at": f.created_at.isoformat()
-            }
-            for f in files
-        ]
-    }
+    # Get file sizes from Telegram
+    from app.bot.main import _bot_instance
+    from app.bot.helpers import format_file_size
+    
+    files_data = []
+    for f in files:
+        file_size_bytes = 0
+        file_size_formatted = "0 B"
+        
+        if _bot_instance:
+            try:
+                file_info = await _bot_instance.get_file(f.file_id)
+                if file_info and file_info.file_size:
+                    file_size_bytes = file_info.file_size
+                    file_size_formatted = format_file_size(file_size_bytes)
+            except Exception:
+                pass  # Keep default 0 if we can't get file size
+        
+        files_data.append({
+            "id": f.id,
+            "title": f.title,
+            "level": f.level,
+            "tags": f.tags,
+            "file_type": f.file_type,
+            "file_size_bytes": file_size_bytes,
+            "file_size_formatted": file_size_formatted,
+            "downloads_count": f.downloads_count,
+            "created_at": f.created_at.isoformat()
+        })
+    
+    return {"files": files_data}
 
 
 @router.get("/api/files/{file_id}")

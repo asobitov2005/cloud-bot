@@ -5,16 +5,39 @@ from app.bot.middlewares.user_check import UserCheckMiddleware
 from app.bot.middlewares.language import LanguageMiddleware
 from app.bot.middlewares.admin_check import AdminCheckMiddleware
 from app.bot.middlewares.fsub_check import FSubCheckMiddleware
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Try to import RedisStorage, but make it optional
+try:
+    from aiogram.fsm.storage.redis import RedisStorage
+    REDIS_AVAILABLE = True
+except ImportError:
+    RedisStorage = None
+    REDIS_AVAILABLE = False
+    logger.warning("Redis storage not available - install redis package for FSM persistence")
 
 # Import handlers
 from app.bot.handlers import start, search, downloads, saved_list, help, default, stats
 from app.bot.handlers.admin import upload, delete, stats as admin_stats, users, broadcast, settings as admin_settings, fsub
 
 
-# Initialize bot and dispatcher
-bot = Bot(token=settings.BOT_TOKEN)
-storage = MemoryStorage()
-dp = Dispatcher(storage=storage)
+# Initialize bot with optimized configuration
+from app.bot.polling import create_optimized_bot_session
+
+# Create optimized session for Bot API requests
+session = create_optimized_bot_session()
+
+# Initialize bot with optimized session
+bot = Bot(
+    token=settings.BOT_TOKEN,
+    session=session
+)
+
+# Storage will be set up in init_bot() to allow async Redis connection
+storage = None  # Will be initialized in init_bot()
+dp = None  # Will be initialized in init_bot()
 
 
 def setup_middlewares():
@@ -65,8 +88,57 @@ def setup_routers():
     dp.include_router(default.router)
 
 
+async def get_storage():
+    """Get FSM storage - Redis if available, otherwise MemoryStorage"""
+    if not REDIS_AVAILABLE or RedisStorage is None:
+        logger.info("Redis storage not available, using MemoryStorage for FSM")
+        return MemoryStorage()
+    
+    try:
+        from app.core.redis_client import get_redis_client
+        
+        # Try to connect to Redis
+        try:
+            redis_client = await get_redis_client()
+            if redis_client:
+                logger.info("Using Redis storage for FSM")
+                return RedisStorage(redis=redis_client)
+        except Exception as e:
+            logger.warning(f"Failed to connect to Redis for FSM storage: {e}. Using MemoryStorage.")
+            return MemoryStorage()
+    except ImportError:
+        logger.warning("Redis client not available, using MemoryStorage for FSM")
+        return MemoryStorage()
+    
+    return MemoryStorage()
+
+
 def init_bot():
     """Initialize bot with all components"""
+    global storage, dp
+    
+    # Use MemoryStorage initially - will be upgraded to Redis in on_startup if available
+    storage = MemoryStorage()
+    dp = Dispatcher(storage=storage)
+    
     setup_middlewares()
     setup_routers()
     return bot, dp
+
+
+async def upgrade_storage_to_redis():
+    """Upgrade FSM storage to Redis if available (called during startup)"""
+    global storage, dp
+    if not REDIS_AVAILABLE or RedisStorage is None:
+        logger.info("Redis storage not available, keeping MemoryStorage")
+        return
+    
+    try:
+        redis_storage = await get_storage()
+        if RedisStorage and isinstance(redis_storage, RedisStorage):
+            # Replace storage
+            dp.storage = redis_storage
+            storage = redis_storage
+            logger.info("FSM storage upgraded to Redis")
+    except Exception as e:
+        logger.warning(f"Could not upgrade to Redis storage: {e}")

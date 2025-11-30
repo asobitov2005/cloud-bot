@@ -4,6 +4,12 @@ from datetime import datetime
 
 Base = declarative_base()
 
+# Import HealthCheck model to ensure it's registered with Base
+try:
+    from app.models.health import HealthCheck
+except ImportError:
+    HealthCheck = None
+
 class User(Base):
     __tablename__ = "users"
 
@@ -46,7 +52,7 @@ class Download(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    file_id = Column(Integer, ForeignKey("files.id"))
+    file_id = Column(Integer, ForeignKey("files.id", ondelete="SET NULL"))  # Keep download records even if file is deleted
     downloaded_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="downloads")

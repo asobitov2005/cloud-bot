@@ -15,36 +15,82 @@ logger = logging.getLogger(__name__)
 should_shutdown = False
 
 async def run_bot():
-    """Run the Telegram bot with proper signal handling."""
-    logger.info("Starting Telegram bot...")
+    """Run the Telegram bot with optimized polling and proper signal handling."""
+    logger.info("Starting Telegram bot with optimized polling...")
     
     # Import required functions
     from app.bot import init_bot
     from app.bot.main import on_startup, on_shutdown, set_bot_instance
+    from app.bot.polling import start_polling_optimized, setup_webhook_fallback
+    from app.core.redis_client import close_redis
+    from app.core.config import settings
     
     # Initialize bot and dispatcher
     bot, dp = init_bot()
     set_bot_instance(bot)
+    
+    # Setup webhook handler (for webhook fallback mode)
+    from app.bot.webhook import set_dispatcher, set_bot
+    set_dispatcher(dp)
+    set_bot(bot)
     
     try:
         # Register aiogram startup/shutdown callbacks
         dp.startup.register(on_startup)
         dp.shutdown.register(on_shutdown)
         
-        # Start polling WITHOUT signal handling
-        await dp.start_polling(
-            bot, 
-            allowed_updates=dp.resolve_used_update_types(),
+        # Start optimized polling with automatic reconnection
+        await start_polling_optimized(
+            bot=bot,
+            dp=dp,
             handle_signals=False  # Critical: disable aiogram's signal handling
         )
+        
     except asyncio.CancelledError:
         logger.info("Bot task cancelled, stopping polling...")
-        await dp.stop_polling()
+        try:
+            await dp.stop_polling()
+        except Exception:
+            pass
         raise
+        
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt received, stopping...")
+        try:
+            await dp.stop_polling()
+        except Exception:
+            pass
+            
     except Exception as e:
-        logger.error(f"Error running bot: {e}", exc_info=True)
-        raise
+        logger.error(f"Fatal error running bot: {e}", exc_info=True)
+        
+        # Try webhook fallback if configured
+        if settings.WEBHOOK_URL:
+            logger.info("Attempting webhook fallback...")
+            webhook_success = await setup_webhook_fallback(
+                bot=bot,
+                webhook_url=settings.WEBHOOK_URL,
+                webhook_path=settings.WEBHOOK_PATH
+            )
+            if webhook_success:
+                logger.info("Webhook fallback activated. Bot will receive updates via webhook.")
+                # Keep bot running for webhook mode
+                try:
+                    await asyncio.Event().wait()  # Wait indefinitely
+                except asyncio.CancelledError:
+                    pass
+            else:
+                logger.error("Webhook fallback failed")
+                raise
+        else:
+            raise
+            
     finally:
+        # Close Redis connection if used
+        try:
+            await close_redis()
+        except Exception as e:
+            logger.warning(f"Error closing Redis: {e}")
         logger.info("Bot cleanup complete")
 
 async def run_api():

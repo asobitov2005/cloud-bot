@@ -6,8 +6,8 @@
 {% block content %}
 <div class="page-header">
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search users..." />
-        <button onclick="searchUsers()"><i class="fas fa-search"></i> Search</button>
+        <input type="text" id="searchInput" placeholder="Search users..." oninput="searchUsers()" />
+        <!-- <i class="fas fa-search" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i> -->
     </div>
 </div>
 
@@ -151,32 +151,44 @@
         `).join('');
     }
 
+    // Debounced search function
+    let searchTimeout;
     function searchUsers() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = currentUsers.filter(u =>
-            (u.username && u.username.toLowerCase().includes(query)) ||
-            (u.full_name && u.full_name.toLowerCase().includes(query)) ||
-            u.telegram_id.toString().includes(query)
-        );
-        renderUsers(filtered);
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            if (query === '') {
+                renderUsers(currentUsers);
+                return;
+            }
+            const filtered = currentUsers.filter(u =>
+                (u.username && u.username.toLowerCase().includes(query)) ||
+                (u.full_name && u.full_name.toLowerCase().includes(query)) ||
+                u.telegram_id.toString().includes(query)
+            );
+            renderUsers(filtered);
+        }, 300); // 300ms debounce
     }
 
     async function blockUser(userId) {
-        if (!confirm('Are you sure you want to block this user?')) return;
+        showConfirmDialog(
+            'Are you sure you want to block this user?',
+            async () => {
+                try {
+                    const res = await fetch(`/admin/api/users/${userId}/block`, {
+                        method: 'POST',
+                        credentials: 'same-origin'
+                    });
+                    if (!res.ok) await handleApiError(res);
 
-        try {
-            const res = await fetch(`/admin/api/users/${userId}/block`, {
-                method: 'POST',
-                credentials: 'same-origin'
-            });
-            if (!res.ok) await handleApiError(res);
-
-            loadUsers();
-            alert('User blocked successfully!');
-        } catch (error) {
-            console.error('Error blocking user:', error);
-            alert('Error blocking user');
-        }
+                    loadUsers();
+                    showNotification('User blocked successfully!', 'success');
+                } catch (error) {
+                    console.error('Error blocking user:', error);
+                    showNotification('Error blocking user', 'error');
+                }
+            }
+        );
     }
 
     async function unblockUser(userId) {
@@ -188,10 +200,10 @@
             if (!res.ok) await handleApiError(res);
 
             loadUsers();
-            alert('User unblocked successfully!');
+            showNotification('User unblocked successfully!', 'success');
         } catch (error) {
             console.error('Error unblocking user:', error);
-            alert('Error unblocking user');
+            showNotification('Error unblocking user', 'error');
         }
     }
 
@@ -328,21 +340,24 @@
     }
 
     async function removeAdmin(userId) {
-        if (!confirm('Are you sure you want to remove admin rights from this user?')) return;
+        showConfirmDialog(
+            'Are you sure you want to remove admin rights from this user?',
+            async () => {
+                try {
+                    const res = await fetch(`/admin/api/users/${userId}/remove-admin`, {
+                        method: 'POST',
+                        credentials: 'same-origin'
+                    });
+                    if (!res.ok) await handleApiError(res);
 
-        try {
-            const res = await fetch(`/admin/api/users/${userId}/remove-admin`, {
-                method: 'POST',
-                credentials: 'same-origin'
-            });
-            if (!res.ok) await handleApiError(res);
-
-            loadUsers();
-            showNotification('Admin rights removed successfully!', 'success');
-        } catch (error) {
-            console.error('Error removing admin rights:', error);
-            showNotification('Error removing admin rights', 'error');
-        }
+                    loadUsers();
+                    showNotification('Admin rights removed successfully!', 'success');
+                } catch (error) {
+                    console.error('Error removing admin rights:', error);
+                    showNotification('Error removing admin rights', 'error');
+                }
+            }
+        );
     }
 
     loadUsers();

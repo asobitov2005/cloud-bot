@@ -115,9 +115,9 @@ TRANSLATIONS = {
         "ru": "✅ Файл сохранен в ваш список!"
     },
     "already_saved": {
-        "uz": "ℹ️ Bu fayl allaqachon ro'yxatda.",
-        "en": "ℹ️ This file is already in your list.",
-        "ru": "ℹ️ Этот файл уже в вашем списке."
+        "uz": "❗️ Bu fayl allaqachon ro'yxatda.",
+        "en": "❗️ This file is already in your list.",
+        "ru": "❗️ Этот файл уже в вашем списке."
     },
     "file_removed": {
         "uz": "✅ Fayl ro'yxatdan o'chirildi.",

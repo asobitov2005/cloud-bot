@@ -2,6 +2,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.bot.translations import get_text
+from app.bot.helpers import safe_answer_callback
 from app.bot.keyboards.inline import get_file_actions_keyboard, get_pagination_keyboard
 from app.models.crud import (
     get_file_by_id, create_download, increment_download_count
@@ -18,17 +19,23 @@ router = Router()
 @router.callback_query(F.data.startswith("download:"))
 async def handle_download(callback: CallbackQuery, lang: str, db: AsyncSession, db_user):
     """Handle download button press"""
-    file_id = int(callback.data.split(":")[1])
+    # Answer callback IMMEDIATELY to prevent expiration
+    await safe_answer_callback(callback)
     
-    # Get file
+    try:
+        file_id = int(callback.data.split(":")[1])
+    except (ValueError, IndexError):
+        # Query already answered, just send error message
+        await callback.message.answer(get_text("delete_not_found", lang))
+        return
+    
+    # Get file (this may take time, but callback is already answered)
     file = await get_file_by_id(db, file_id)
     
     if not file:
-        await callback.answer(get_text("delete_not_found", lang), show_alert=True)
+        # Query already answered, just send error message
+        await callback.message.answer(get_text("delete_not_found", lang))
         return
-    
-    # Answer callback immediately to stop button loading animation
-    await callback.answer()
     
     # Send downloading message to user
     downloading_msg = await callback.message.answer(get_text("downloading", lang))

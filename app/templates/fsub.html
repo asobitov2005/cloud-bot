@@ -158,24 +158,25 @@
     }
 
     async function removeChannel(channelId) {
-        if (!confirm('Are you sure you want to remove this channel?')) {
-            return;
-        }
+        showConfirmDialog(
+            'Are you sure you want to remove this channel?',
+            async () => {
+                try {
+                    const response = await fetch(`/admin/api/fsub/${channelId}`, {
+                        method: 'DELETE',
+                        credentials: 'same-origin'
+                    });
 
-        try {
-            const response = await fetch(`/admin/api/fsub/${channelId}`, {
-                method: 'DELETE',
-                credentials: 'same-origin'
-            });
+                    if (!response.ok) await handleApiError(response);
 
-            if (!response.ok) await handleApiError(response);
-
-            showNotification('Channel removed successfully', 'success');
-            loadFsubChannels();
-        } catch (error) {
-            console.error('Error removing channel:', error);
-            showNotification('Error removing channel', 'error');
-        }
+                    showNotification('Channel removed successfully', 'success');
+                    loadFsubChannels();
+                } catch (error) {
+                    console.error('Error removing channel:', error);
+                    showNotification('Error removing channel', 'error');
+                }
+            }
+        );
     }
 
     // Close modal when clicking outside

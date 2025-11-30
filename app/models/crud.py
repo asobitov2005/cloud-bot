@@ -1,6 +1,7 @@
 from typing import Optional, List, Dict, Any
-from sqlalchemy import select, func, desc, or_, and_
+from sqlalchemy import select, func, desc, or_, and_, text, cast, Date
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 from app.models.base import User, File, Download, SavedList
 from app.models.settings import Settings
@@ -175,11 +176,22 @@ async def user_has_permission(db: AsyncSession, telegram_id: int,
 
 # ==================== FILE CRUD ====================
 
+async def update_file_processed_id(db: AsyncSession, file_id: int, processed_file_id: str) -> File:
+    """Update processed_file_id for a file"""
+    result = await db.execute(select(File).where(File.id == file_id))
+    file = result.scalar_one_or_none()
+    if file:
+        file.processed_file_id = processed_file_id
+        await db.commit()
+        await db.refresh(file)
+    return file
+
+
 async def create_file(db: AsyncSession, file_id: str, title: str, 
-                      file_type: str = "regular", type: str = "document",
-                      level: str = None, tags: str = None, 
-                      description: str = None, thumbnail_id: str = None,
-                      file_name: str = None, processed_file_id: str = None) -> File:
+                     file_type: str = "regular", type: str = "document",
+                     level: str = None, tags: str = None,
+                     description: str = None, thumbnail_id: str = None,
+                     file_name: str = None, processed_file_id: str = None) -> File:
     """Create new file"""
     db_file = File(
         file_id=file_id,
@@ -249,14 +261,27 @@ async def get_files_count(db: AsyncSession, file_type: str = None) -> int:
 
 
 async def delete_file(db: AsyncSession, file_id: int) -> bool:
-    """Delete file"""
+    """
+    Delete file from database
+    
+    Note: Downloads records are preserved (not cascade deleted) to maintain
+    download statistics even after file deletion.
+    """
+    from sqlalchemy import delete
+    
+    # Check if file exists
     result = await db.execute(select(File).where(File.id == file_id))
     file = result.scalar_one_or_none()
-    if file:
-        await db.delete(file)
-        await db.commit()
-        return True
-    return False
+    
+    if not file:
+        return False
+    
+    # Delete the file using SQLAlchemy delete statement
+    # This will NOT cascade delete downloads (foreign key constraint allows NULL or we keep them)
+    await db.execute(delete(File).where(File.id == file_id))
+    await db.commit()
+    
+    return True
 
 
 async def update_file(db: AsyncSession, file_id: int, **kwargs) -> Optional[File]:
@@ -284,12 +309,49 @@ async def increment_download_count(db: AsyncSession, file_id: int) -> None:
 # ==================== DOWNLOAD CRUD ====================
 
 async def create_download(db: AsyncSession, user_id: int, file_id: int) -> Download:
-    """Record a download"""
-    download = Download(user_id=user_id, file_id=file_id)
-    db.add(download)
-    await db.commit()
-    await db.refresh(download)
-    return download
+    """
+    Record a download
+    
+    Note: If there's a sequence issue (duplicate key), this will attempt to fix it
+    and retry once. This can happen after migrating from SQLite to PostgreSQL.
+    """
+    try:
+        download = Download(user_id=user_id, file_id=file_id)
+        db.add(download)
+        await db.commit()
+        await db.refresh(download)
+        return download
+    except IntegrityError as e:
+        # Handle sequence issues after migration
+        error_str = str(e).lower()
+        if "duplicate key" in error_str and "downloads_pkey" in error_str:
+            # Sequence issue - try to fix it
+            await db.rollback()
+            try:
+                from sqlalchemy import text
+                # Get max ID and fix sequence
+                result = await db.execute(text("SELECT COALESCE(MAX(id), 0) FROM downloads"))
+                max_id = result.scalar() or 0
+                await db.execute(text(f"SELECT setval('downloads_id_seq', {max_id + 1}, false)"))
+                await db.commit()
+                
+                # Retry the insert
+                download = Download(user_id=user_id, file_id=file_id)
+                db.add(download)
+                await db.commit()
+                await db.refresh(download)
+                return download
+            except Exception as fix_error:
+                await db.rollback()
+                # If fixing fails, just log and re-raise
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Could not fix downloads sequence: {fix_error}")
+                raise
+        else:
+            # Other integrity errors - re-raise
+            await db.rollback()
+            raise
 
 
 async def get_user_downloads(db: AsyncSession, user_id: int, 
@@ -309,8 +371,13 @@ async def get_total_downloads(db: AsyncSession) -> int:
 
 
 async def get_top_downloaded_files(db: AsyncSession, limit: int = 10) -> List[Dict[str, Any]]:
-    """Get top downloaded files"""
-    query = select(File).order_by(desc(File.downloads_count)).limit(limit)
+    """
+    Get top downloaded files
+    
+    Note: Only returns files that still exist (not deleted).
+    Download records for deleted files are preserved but not shown here.
+    """
+    query = select(File).where(File.id.isnot(None)).order_by(desc(File.downloads_count)).limit(limit)
     result = await db.execute(query)
     files = result.scalars().all()
     return [{"file": file, "downloads": file.downloads_count} for file in files]
@@ -565,39 +632,78 @@ async def get_total_files_volume(db: AsyncSession) -> Dict[str, Any]:
 
 async def get_downloads_by_period(db: AsyncSession) -> Dict[str, List[Dict[str, Any]]]:
     """Get downloads grouped by daily, weekly, and monthly"""
+    from app.core.database import get_database_url
+    from sqlalchemy import text
+    
+    db_url = get_database_url()
+    is_postgresql = db_url.startswith("postgresql")
+    
     now = datetime.utcnow()
     
     # Daily (last 30 days)
     daily_start = now - timedelta(days=30)
-    daily_query = select(
-        func.date(Download.downloaded_at).label('date'),
-        func.count(Download.id).label('count')
-    ).where(Download.downloaded_at >= daily_start)\
-     .group_by(func.date(Download.downloaded_at))\
-     .order_by('date')
+    if is_postgresql:
+        # PostgreSQL: use cast to DATE
+        daily_query = select(
+            cast(Download.downloaded_at, Date).label('date'),
+            func.count(Download.id).label('count')
+        ).where(Download.downloaded_at >= daily_start)\
+         .group_by(cast(Download.downloaded_at, Date))\
+         .order_by(cast(Download.downloaded_at, Date))
+    else:
+        # SQLite
+        daily_query = select(
+            func.date(Download.downloaded_at).label('date'),
+            func.count(Download.id).label('count')
+        ).where(Download.downloaded_at >= daily_start)\
+         .group_by(func.date(Download.downloaded_at))\
+         .order_by('date')
     daily_result = await db.execute(daily_query)
     daily_data = [{"date": str(row.date), "count": row.count} for row in daily_result]
     
-    # Weekly (last 12 weeks) - using date arithmetic for SQLite compatibility
+    # Weekly (last 12 weeks)
     weekly_start = now - timedelta(weeks=12)
-    # For SQLite, we'll group by week number calculated from date
-    weekly_query = select(
-        func.date(Download.downloaded_at, 'weekday 0', '-6 days').label('week_start'),
-        func.count(Download.id).label('count')
-    ).where(Download.downloaded_at >= weekly_start)\
-     .group_by(func.date(Download.downloaded_at, 'weekday 0', '-6 days'))\
-     .order_by('week_start')
+    if is_postgresql:
+        # PostgreSQL: use DATE_TRUNC('week', ...) to get start of week (Monday)
+        # Create the expression once and reuse it
+        week_trunc = cast(func.date_trunc('week', Download.downloaded_at), Date)
+        weekly_query = select(
+            week_trunc.label('week_start'),
+            func.count(Download.id).label('count')
+        ).where(Download.downloaded_at >= weekly_start)\
+         .group_by(week_trunc)\
+         .order_by(week_trunc)
+    else:
+        # SQLite: use date arithmetic
+        weekly_query = select(
+            func.date(Download.downloaded_at, 'weekday 0', '-6 days').label('week_start'),
+            func.count(Download.id).label('count')
+        ).where(Download.downloaded_at >= weekly_start)\
+         .group_by(func.date(Download.downloaded_at, 'weekday 0', '-6 days'))\
+         .order_by('week_start')
     weekly_result = await db.execute(weekly_query)
     weekly_data = [{"period": str(row.week_start), "count": row.count} for row in weekly_result]
     
-    # Monthly (last 12 months) - using date format for SQLite
+    # Monthly (last 12 months)
     monthly_start = now - timedelta(days=365)
-    monthly_query = select(
-        func.strftime('%Y-%m', Download.downloaded_at).label('month'),
-        func.count(Download.id).label('count')
-    ).where(Download.downloaded_at >= monthly_start)\
-     .group_by(func.strftime('%Y-%m', Download.downloaded_at))\
-     .order_by('month')
+    if is_postgresql:
+        # PostgreSQL: use TO_CHAR function
+        # Create the expression once and reuse it
+        month_char = func.to_char(Download.downloaded_at, text("'YYYY-MM'"))
+        monthly_query = select(
+            month_char.label('month'),
+            func.count(Download.id).label('count')
+        ).where(Download.downloaded_at >= monthly_start)\
+         .group_by(month_char)\
+         .order_by(month_char)
+    else:
+        # SQLite: use strftime
+        monthly_query = select(
+            func.strftime('%Y-%m', Download.downloaded_at).label('month'),
+            func.count(Download.id).label('count')
+        ).where(Download.downloaded_at >= monthly_start)\
+         .group_by(func.strftime('%Y-%m', Download.downloaded_at))\
+         .order_by('month')
     monthly_result = await db.execute(monthly_query)
     monthly_data = [{"period": row.month, "count": row.count} for row in monthly_result]
     
@@ -627,40 +733,79 @@ async def log_health_check(db: AsyncSession, check_type: str, error_message: str
 
 
 async def get_health_stats(db: AsyncSession, days: int = 7) -> Dict[str, Any]:
-    """Get health check statistics"""
-    start_date = datetime.utcnow() - timedelta(days=days)
+    """
+    Get health check statistics
     
-    # Total errors by type
-    errors_query = select(
-        HealthCheck.check_type,
-        func.count(HealthCheck.id).label('count')
-    ).where(HealthCheck.occurred_at >= start_date)\
-     .group_by(HealthCheck.check_type)
-    errors_result = await db.execute(errors_query)
-    errors_by_type = {row.check_type: row.count for row in errors_result}
+    Returns empty stats if health_checks table doesn't exist (graceful degradation)
+    """
+    # Check if HealthCheck model is available
+    if HealthCheck is None:
+        return {
+            "total_errors": 0,
+            "errors_by_type": {},
+            "errors_by_day": []
+        }
     
-    # Errors by day
-    errors_by_day_query = select(
-        func.date(HealthCheck.occurred_at).label('date'),
-        func.count(HealthCheck.id).label('count')
-    ).where(HealthCheck.occurred_at >= start_date)\
-     .group_by(func.date(HealthCheck.occurred_at))\
-     .order_by('date')
-    errors_by_day_result = await db.execute(errors_by_day_query)
-    errors_by_day = [{"date": str(row.date), "count": row.count} for row in errors_by_day_result]
-    
-    # Total errors
-    total_errors_query = select(func.count(HealthCheck.id)).where(
-        HealthCheck.occurred_at >= start_date
-    )
-    total_errors_result = await db.execute(total_errors_query)
-    total_errors = total_errors_result.scalar() or 0
-    
-    return {
-        "total_errors": total_errors,
-        "errors_by_type": errors_by_type,
-        "errors_by_day": errors_by_day
-    }
+    try:
+        from app.core.database import get_database_url
+        from sqlalchemy import cast, Date
+        
+        db_url = get_database_url()
+        is_postgresql = db_url.startswith("postgresql")
+        
+        start_date = datetime.utcnow() - timedelta(days=days)
+        
+        # Total errors by type
+        errors_query = select(
+            HealthCheck.check_type,
+            func.count(HealthCheck.id).label('count')
+        ).where(HealthCheck.occurred_at >= start_date)\
+         .group_by(HealthCheck.check_type)
+        errors_result = await db.execute(errors_query)
+        errors_by_type = {row.check_type: row.count for row in errors_result}
+        
+        # Errors by day
+        if is_postgresql:
+            # PostgreSQL: use cast to DATE
+            errors_by_day_query = select(
+                cast(HealthCheck.occurred_at, Date).label('date'),
+                func.count(HealthCheck.id).label('count')
+            ).where(HealthCheck.occurred_at >= start_date)\
+             .group_by(cast(HealthCheck.occurred_at, Date))\
+             .order_by(cast(HealthCheck.occurred_at, Date))
+        else:
+            # SQLite
+            errors_by_day_query = select(
+                func.date(HealthCheck.occurred_at).label('date'),
+                func.count(HealthCheck.id).label('count')
+            ).where(HealthCheck.occurred_at >= start_date)\
+             .group_by(func.date(HealthCheck.occurred_at))\
+             .order_by('date')
+        errors_by_day_result = await db.execute(errors_by_day_query)
+        errors_by_day = [{"date": str(row.date), "count": row.count} for row in errors_by_day_result]
+        
+        # Total errors
+        total_errors_query = select(func.count(HealthCheck.id)).where(
+            HealthCheck.occurred_at >= start_date
+        )
+        total_errors_result = await db.execute(total_errors_query)
+        total_errors = total_errors_result.scalar() or 0
+        
+        return {
+            "total_errors": total_errors,
+            "errors_by_type": errors_by_type,
+            "errors_by_day": errors_by_day
+        }
+    except Exception as e:
+        # If table doesn't exist or any other error, return empty stats
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Could not get health stats (table may not exist): {e}")
+        return {
+            "total_errors": 0,
+            "errors_by_type": {},
+            "errors_by_day": []
+        }
 
 
 # ==================== SETTINGS CRUD ====================

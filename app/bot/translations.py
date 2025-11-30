@@ -4,7 +4,7 @@
 TRANSLATIONS = {
     # Start and language selection
     "welcome": {
-        "uz": "Assalomu alaykum! PrimeLingoBot'ga xush kelibsiz! 🎓\n\nQuyidagi bo'limlardan birini tanlang:",
+        "uz": "<b>Assalamu alaykum!</b> <b>PrimeLingoBot</b>'ga xush kelibsiz! 🎓\n\nQuyidagi bo'limlardan birini tanlang:",
         "en": "Hello! Welcome to PrimeLingoBot! 🎓\n\nPlease select an option:",
         "ru": "Здравствуйте! Добро пожаловать в PrimeLingoBot! 🎓\n\nПожалуйста, выберите опцию:"
     },
@@ -31,9 +31,9 @@ TRANSLATIONS = {
         "ru": "📥 Мои загрузки"
     },
     "btn_my_list": {
-        "uz": "⭐️ Mening ro'yxatim",
-        "en": "⭐️ My List",
-        "ru": "⭐️ Мой список"
+        "uz": "📁 Mening ro'yxatim",
+        "en": "📁 My List",
+        "ru": "📁 Мой список"
     },
     "btn_help": {
         "uz": "❓ Yordam",
@@ -48,19 +48,39 @@ TRANSLATIONS = {
     
     # Search flow
     "enter_search_query": {
-        "uz": "📚 Kitob nomini kiriting:",
-        "en": "📚 Enter book name:",
-        "ru": "📚 Введите название книги:"
+        "uz": "<b>Qidiruv uchun kitob nomini kiriting:</b>",
+        "en": "<b>Enter book name:</b>",
+        "ru": "<b>Введите название книги:</b>"
     },
     "search_results": {
         "uz": "🔍 Qidiruv natijalari:",
         "en": "🔍 Search results:",
         "ru": "🔍 Результаты поиска:"
     },
+    "searching": {
+        "uz": "🔍 Qidirilmoqda.....",
+        "en": "🔍 Searching.....",
+        "ru": "🔍 Поиск....."
+    },
+    "search_result_for": {
+        "uz": "Qidiruv so'rovi: ☞ {query}",
+        "en": "Search result for: ☞ {query}",
+        "ru": "Результат поиска для: ☞ {query}"
+    },
+    "result_shown_in": {
+        "uz": "Natija ko'rsatildi: ☞ {time} sekund",
+        "en": "Result shown in: ☞ {time} seconds",
+        "ru": "Результат показан за: ☞ {time} секунд"
+    },
     "no_results": {
-        "uz": "❌ Hech narsa topilmadi. Boshqa so'z bilan qidiring.",
-        "en": "❌ No results found. Try searching with different keywords.",
-        "ru": "❌ Ничего не найдено. Попробуйте другие ключевые слова."
+        "uz": "🚫 Hech narsa topilmadi. Boshqa so'z bilan qidiring.",
+        "en": "🚫 No results found. Try searching with different keywords.",
+        "ru": "🚫 Ничего не найдено. Попробуйте другие ключевые слова."
+    },
+    "select_menu_option": {
+        "uz": "Quyidagi menular birini tanlang:",
+        "en": "Please select one of the following menu options:",
+        "ru": "Пожалуйста, выберите один из следующих пунктов меню:"
     },
     "level": {
         "uz": "Daraja",
@@ -75,9 +95,9 @@ TRANSLATIONS = {
         "ru": "⬇️ Скачать"
     },
     "btn_save": {
-        "uz": "⭐️ Saqlash",
-        "en": "⭐️ Save to My List",
-        "ru": "⭐️ Сохранить"
+        "uz": " Saqlash",
+        "en": "📁 Save to My List",
+        "ru": "📁 Сохранить"
     },
     "btn_remove": {
         "uz": "🗑 O'chirish",
@@ -85,9 +105,9 @@ TRANSLATIONS = {
         "ru": "🗑 Удалить"
     },
     "downloading": {
-        "uz": "📥 Yuklab olinmoqda...",
-        "en": "📥 Downloading...",
-        "ru": "📥 Загрузка..."
+        "uz": "⏳ Yuklanmoqda.....",
+        "en": "⏳ Downloading.....",
+        "ru": "⏳ Загрузка....."
     },
     "file_saved": {
         "uz": "✅ Fayl ro'yxatga saqlandi!",
@@ -112,21 +132,21 @@ TRANSLATIONS = {
         "ru": "📥 Загруженные файлы:"
     },
     "no_downloads": {
-        "uz": "❌ Siz hali hech narsa yuklab olmadingiz.",
-        "en": "❌ You haven't downloaded anything yet.",
-        "ru": "❌ Вы еще ничего не загрузили."
+        "uz": "🚫 Siz hali hech narsa yuklab olmadingiz.",
+        "en": "🚫 You haven't downloaded anything yet.",
+        "ru": "🚫 Вы еще ничего не загрузили."
     },
     
     # My List
     "my_list_title": {
-        "uz": "⭐️ Saqlangan fayllar:",
-        "en": "⭐️ Saved files:",
-        "ru": "⭐️ Сохраненные файлы:"
+        "uz": "<b>📁 Saqlangan fayllar:</b>",
+        "en": "📁 Saved files:",
+        "ru": "📁 Сохраненные файлы:"
     },
     "no_saved_files": {
-        "uz": "❌ Saqlangan fayllar yo'q.",
-        "en": "❌ No saved files.",
-        "ru": "❌ Нет сохраненных файлов."
+        "uz": "🚫 Saqlangan fayllar yo'q.",
+        "en": "🚫 No saved files.",
+        "ru": "🚫 Нет сохраненных файлов."
     },
     
     # Help
@@ -134,19 +154,20 @@ TRANSLATIONS = {
         "uz": """❓ <b>Yordam</b>
 
 🤖 <b>Bot haqida:</b>
-PrimeLingoBot - til o'rganish uchun kitoblar va materiallarni topish va yuklab olish uchun bot.
+<b>PrimeLingoBot</b> - til o'rganish uchun kitoblar va materiallarni topish va yuklab olish uchun bot.
 
 📖 <b>Qanday foydalanish:</b>
-• 🔍 Qidiruv - kitob nomini kiriting va qidiring
-• ⬇️ Yuklab olish - faylni Telegram orqali yuklab oling
-• ⭐️ Saqlash - kerakli fayllarni ro'yxatga saqlang
-• 📥 Yuklab olinganlar - yuklab olgan fayllaringiz tarixi
-• 📝 Mock testlar - amaliy testlar
 
-👨‍💼 <b>Admin bilan bog'lanish:</b>
-@{admin_username}
+• 🔍 <b>Qidiruv</b> - kitob nomini kiriting va qidiring
 
-💡 Savollar yoki takliflar bo'lsa, adminga murojaat qiling!""",
+• ⬇️ <b>Yuklab olish</b> - faylni Telegram orqali yuklab oling
+
+• 📁 <b>Saqlash</b> - kerakli fayllarni ro'yxatga saqlang
+
+
+👨‍💻 <b>Admin bilan bog'lanish: {admin_username}</b>
+
+💡 <i>Savollar yoki takliflar bo'lsa, adminga murojaat qiling!</i>""",
         "en": """❓ <b>Help</b>
 
 🤖 <b>About the bot:</b>
@@ -157,7 +178,6 @@ PrimeLingoBot - a bot for finding and downloading books and materials for langua
 • ⬇️ Download - download files via Telegram
 • ⭐️ Save - save useful files to your list
 • 📥 My Downloads - your download history
-• 📝 Mock tests - practice tests
 
 👨‍💼 <b>Contact admin:</b>
 @{admin_username}
@@ -173,7 +193,7 @@ PrimeLingoBot - бот для поиска и загрузки книг и ма�
 • ⬇️ Скачать - загрузите файлы через Telegram
 • ⭐️ Сохранить - сохраните нужные файлы в список
 • 📥 Мои загрузки - история загрузок
-• 📝 Пробные тесты - практические тесты
+
 
 👨‍💼 <b>Связаться с админом:</b>
 @{admin_username}
@@ -200,9 +220,9 @@ PrimeLingoBot - бот для поиска и загрузки книг и ма�
     
     # Admin messages
     "admin_only": {
-        "uz": "❌ Bu buyruq faqat admin uchun.",
-        "en": "❌ This command is for admin only.",
-        "ru": "❌ Эта команда только для админа."
+        "uz": "🚫 Bu buyruq faqat admin uchun.",
+        "en": "🚫 This command is for admin only.",
+        "ru": "🚫 Эта команда только для админа."
     },
     "upload_send_file": {
         "uz": "📤 Faylni yuboring (PDF, MP3, va h.k.):",
@@ -245,9 +265,9 @@ PrimeLingoBot - бот для поиска и загрузки книг и ма�
         "ru": "✅ Файл успешно загружен!\n\n📝 Название: {title}\n🏷 Теги: {tags}"
     },
     "upload_cancelled": {
-        "uz": "❌ Yuklash bekor qilindi.",
-        "en": "❌ Upload cancelled.",
-        "ru": "❌ Загрузка отменена."
+        "uz": "🚫 Yuklash bekor qilindi.",
+        "en": "🚫 Upload cancelled.",
+        "ru": "🚫 Загрузка отменена."
     },
     "delete_success": {
         "uz": "✅ Fayl o'chirildi.",
@@ -255,35 +275,29 @@ PrimeLingoBot - бот для поиска и загрузки книг и ма�
         "ru": "✅ Файл удален."
     },
     "delete_not_found": {
-        "uz": "❌ Fayl topilmadi.",
-        "en": "❌ File not found.",
-        "ru": "❌ Файл не найден."
+        "uz": "🚫 Fayl topilmadi.",
+        "en": "🚫 File not found.",
+        "ru": "🚫 Файл не найден."
     },
     "stats_message": {
-        "uz": """📊 <b>Statistika</b>
+        "uz": """📊 <b>Bot Statistikalari</b>
 
-👥 Jami foydalanuvchilar: {users}
-📁 Jami fayllar: {files}
-📥 Jami yuklab olishlar: {downloads}
+★ Jami foydalanuvchilar: <b>{users}</b>
+★ Jami fayllar: <b>{files}</b>
+★ Ishlatilgan xotira: <b>{storage}</b>
+★ Jami yuklab olishlar: <b>{downloads}</b>""",
+        "en": """📊 <b>Bot Statistics</b>
 
-🔥 <b>Top 10 yuklab olingan fayllar:</b>
-{top_files}""",
-        "en": """📊 <b>Statistics</b>
+★ Total users: <b>{users}</b>
+★ Total files: <b>{files}</b>
+★ Storage used: <b>{storage}</b>
+★ Total downloads: <b>{downloads}</b>""",
+        "ru": """📊 <b>Статистика бота</b>
 
-👥 Total users: {users}
-📁 Total files: {files}
-📥 Total downloads: {downloads}
-
-🔥 <b>Top 10 downloaded files:</b>
-{top_files}""",
-        "ru": """📊 <b>Статистика</b>
-
-👥 Всего пользователей: {users}
-📁 Всего файлов: {files}
-📥 Всего загрузок: {downloads}
-
-🔥 <b>Топ 10 загруженных файлов:</b>
-{top_files}"""
+★ Всего пользователей: <b>{users}</b>
+★ Всего файлов: <b>{files}</b>
+★ Использовано памяти: <b>{storage}</b>
+★ Всего загрузок: <b>{downloads}</b>"""
     },
     "user_blocked": {
         "uz": "✅ Foydalanuvchi bloklandi.",
@@ -301,9 +315,9 @@ PrimeLingoBot - бот для поиска и загрузки книг и ма�
         "ru": "✅ Сообщение отправлено {count} пользователям."
     },
     "you_are_blocked": {
-        "uz": "❌ Siz bloklangansiz. Admin bilan bog'laning.",
-        "en": "❌ You are blocked. Contact the admin.",
-        "ru": "❌ Вы заблокированы. Свяжитесь с админом."
+        "uz": "🚫 Siz bloklangansiz. Admin bilan bog'laning: {admin_username}",
+        "en": "🚫 You are blocked. Contact the admin: @{admin_username}",
+        "ru": "🚫 Вы заблокированы. Свяжитесь с админом: @{admin_username}"
     },
     
     # Settings
@@ -321,6 +335,73 @@ PrimeLingoBot - бот для поиска и загрузки книг и ма�
         "uz": "✅ Standart thumbnail o'chirildi.",
         "en": "✅ Default thumbnail deleted.",
         "ru": "✅ Стандартная миниатюра удалена."
+    },
+    
+    # Force Subscribe (FSub)
+    "no_fsub_channels": {
+        "uz": "🚫 Force Join kanallar yo'q.",
+        "en": "🚫 No Force Join Channels.",
+        "ru": "🚫 Нет каналов для обязательной подписки."
+    },
+    "fsub_channels_list": {
+        "uz": "📢 Force Join kanallar ro'yxati:",
+        "en": "📢 Force Join Channels List:",
+        "ru": "📢 Список каналов для обязательной подписки:"
+    },
+    "add_fsub_instruction": {
+        "uz": "📢 Force Join kanal qo'shish:\n\nKanalni forward qiling yoki kanal username yoki ID ni yuboring.\n\nMisol: @channel yoki -1001234567890",
+        "en": "📢 Add Force Join Channel:\n\nForward a channel message or send channel username or ID.\n\nExample: @channel or -1001234567890",
+        "ru": "📢 Добавить канал для обязательной подписки:\n\nПерешлите сообщение из канала или отправьте username или ID канала.\n\nПример: @channel или -1001234567890"
+    },
+    "fsub_channel_added": {
+        "uz": "✅ Force Join kanal qo'shildi: {channel}",
+        "en": "✅ Force Join channel added: {channel}",
+        "ru": "✅ Канал для обязательной подписки добавлен: {channel}"
+    },
+    "fsub_channel_exists": {
+        "uz": "ℹ️ Bu kanal allaqachon ro'yxatda.",
+        "en": "ℹ️ This channel is already in the list.",
+        "ru": "ℹ️ Этот канал уже в списке."
+    },
+    "fsub_channel_removed": {
+        "uz": "✅ Force Join kanal o'chirildi.",
+        "en": "✅ Force Join channel removed.",
+        "ru": "✅ Канал для обязательной подписки удален."
+    },
+    "fsub_channel_not_found": {
+        "uz": "🚫 Kanal topilmadi. Kanal username yoki ID ni to'g'ri kiriting.",
+        "en": "🚫 Channel not found. Please enter correct channel username or ID.",
+        "ru": "🚫 Канал не найден. Пожалуйста, введите правильный username или ID канала."
+    },
+    "fsub_invalid_format": {
+        "uz": "🚫 Noto'g'ri format. Kanalni forward qiling yoki @username yoki ID kiriting.",
+        "en": "🚫 Invalid format. Forward a channel message or enter @username or ID.",
+        "ru": "🚫 Неверный формат. Перешлите сообщение из канала или введите @username или ID."
+    },
+    "fsub_join_required": {
+        "uz": "<b>⚠️ Botdan foydalanish uchun quyidagi kanal(lar)ga a'zo bo'lishingiz kerak! </b>\n\n<i>Quyidagi tugmalarni bosib kanallarga a'zo bo'ling, so'ng tasdiqlash tugmasini bosing.</i>",
+        "en": "<b>⚠️ You must join the following channel(s) to use the bot: </b>\n\n<i>Click the buttons below to join the channels, then click the confirmation button.</i>",
+        "ru": "<b>⚠️ Вы должны подписаться на следующие каналы, чтобы использовать бота:</b>\n\n<i>Нажмите кнопки ниже, чтобы подписаться на каналы, затем нажмите кнопку подтверждения.</i>"
+    },
+    "btn_confirm_joined": {
+        "uz": "✅ Tasdiqlash - A'zo bo'ldim",
+        "en": "✅ Confirm - I Joined",
+        "ru": "✅ Подтвердить - Я подписался"
+    },
+    "fsub_joined_success": { 
+        "uz": "✅ Tabriklaymiz! Barcha kanallarga a'zo bo'ldingiz. Endi botdan foydalanishingiz mumkin!",
+        "en": "✅ Congratulations! You have joined all channels. You can now use the bot!",
+        "ru": "✅ Поздравляем! Вы подписались на все каналы. Теперь вы можете использовать бота!"
+    },
+    "fsub_not_joined": {
+        "uz": "<b>❗️ Siz hali kanal(lar)ga a'zo bo'lmadingiz:</b>\n\n<b><i>Iltimos, barcha kanallarga a'zo bo'ling va qayta urinib ko'ring.</i></b>",
+        "en": "<b>🚫 You haven't joined the channel(s) yet:</b>\n\nPlease join all channels and try again.",
+        "ru": "<b>🚫 Вы еще не подписались на следующие каналы:</b>\n\nПожалуйста, подпишитесь на все каналы и попробуйте снова."
+    },
+    "fsub_no_channels": {
+        "uz": "ℹ️ Hozircha force join kanallar yo'q.",
+        "en": "ℹ️ No force join channels at the moment.",
+        "ru": "ℹ️ Нет каналов для обязательной подписки в данный момент."
     }
 }
 

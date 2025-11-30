@@ -4,6 +4,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.crud import get_setting
 
 
+def format_file_size(size_bytes: int) -> str:
+    """Format file size in human-readable format"""
+    if not size_bytes:
+        return "0 B"
+    
+    for unit in ['B', 'KB', 'MB', 'GB']:
+        if size_bytes < 1024.0:
+            if unit == 'B':
+                return f"{int(size_bytes)} {unit}"
+            return f"{size_bytes:.1f} {unit}"
+        size_bytes /= 1024.0
+    return f"{size_bytes:.1f} TB"
+
+
 async def get_thumbnail_for_file(bot: Bot, file_id: str, current_thumbnail: str, db: AsyncSession) -> str:
     """
     Get thumbnail for a file. Returns current thumbnail if exists, 

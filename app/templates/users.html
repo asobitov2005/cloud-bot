@@ -19,7 +19,6 @@
                 <th>Telegram ID</th>
                 <th>Username</th>
                 <th>Full Name</th>
-                <th>Language</th>
                 <th>Joined</th>
                 <th>Role</th>
                 <th>Status</th>
@@ -28,10 +27,55 @@
         </thead>
         <tbody id="usersTableBody">
             <tr>
-                <td colspan="9" class="text-center">Loading...</td>
+                <td colspan="8" class="text-center">Loading...</td>
             </tr>
         </tbody>
     </table>
+</div>
+
+<!-- Make Admin Modal -->
+<div id="makeAdminModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeMakeAdminModal()">&times;</span>
+        <h2>Make User Admin</h2>
+        <p>Select permissions to grant to this user:</p>
+        <form id="makeAdminForm" onsubmit="makeAdminWithPermissions(event)">
+            <input type="hidden" id="adminUserId" />
+            <div id="permissionsList" style="max-height: 400px; overflow-y: auto; margin: 15px 0;">
+                <!-- Permissions checkboxes will be added here -->
+            </div>
+            <div style="margin-top: 15px;">
+                <button type="button" onclick="selectAllPermissions()" class="btn btn-sm btn-secondary">Select All</button>
+                <button type="button" onclick="deselectAllPermissions()" class="btn btn-sm btn-secondary">Deselect All</button>
+            </div>
+            <div style="margin-top: 20px;">
+                <button type="submit" class="btn btn-primary">Make Admin</button>
+                <button type="button" onclick="closeMakeAdminModal()" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Permissions Modal -->
+<div id="editPermissionsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditPermissionsModal()">&times;</span>
+        <h2>Edit Admin Permissions</h2>
+        <form id="editPermissionsForm" onsubmit="updatePermissions(event)">
+            <input type="hidden" id="editPermissionsUserId" />
+            <div id="editPermissionsList" style="max-height: 400px; overflow-y: auto; margin: 15px 0;">
+                <!-- Permissions checkboxes will be added here -->
+            </div>
+            <div style="margin-top: 15px;">
+                <button type="button" onclick="selectAllEditPermissions()" class="btn btn-sm btn-secondary">Select All</button>
+                <button type="button" onclick="deselectAllEditPermissions()" class="btn btn-sm btn-secondary">Deselect All</button>
+            </div>
+            <div style="margin-top: 20px;">
+                <button type="submit" class="btn btn-primary">Update Permissions</button>
+                <button type="button" onclick="closeEditPermissionsModal()" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
@@ -57,7 +101,7 @@
         const tbody = document.getElementById('usersTableBody');
 
         if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center">No users found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center">No users found</td></tr>';
             return;
         }
 
@@ -67,13 +111,19 @@
                 <td>${user.telegram_id}</td>
                 <td>@${user.username || 'N/A'}</td>
                 <td>${user.full_name || 'Unknown'}</td>
-                <td>${user.language.toUpperCase()}</td>
+                
                 <td>${new Date(user.joined_at).toLocaleDateString()}</td>
-                <td>
+                <td style="min-width: 150px;">
                     ${user.is_primary_admin ?
                 '<span class="badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;"><i class="fas fa-crown"></i> Super Admin</span>' :
                 user.is_admin ?
-                    '<span class="badge" style="background: #667eea; color: white;"><i class="fas fa-shield-alt"></i> Admin</span>' :
+                    `<div>
+                        <span class="badge" style="background: #667eea; color: white; cursor: pointer; transition: opacity 0.2s;" onclick="editPermissions(${user.id})" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"><i class="fas fa-shield-alt"></i> Admin <i class="fas fa-edit" style="font-size: 0.8em; margin-left: 5px;"></i></span>
+                        ${user.permissions && user.permissions.length > 0 ? 
+                            '<div style="margin-top: 5px;"><small style="font-size: 0.75em; color: #666; display: block; word-break: break-word;">' + user.permissions.join(', ') + '</small></div>' : 
+                            '<div style="margin-top: 5px;"><small style="font-size: 0.75em; color: #999;">No permissions</small></div>'
+                        }
+                    </div>` :
                     '<span class="badge badge-secondary"><i class="fas fa-user"></i> User</span>'
             }
                 </td>
@@ -83,17 +133,19 @@
                 '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Active</span>'
             }
                 </td>
-                <td style="white-space: nowrap;">
-                    ${user.is_blocked ?
-                `<button class="btn btn-sm btn-success" onclick="unblockUser(${user.id})"><i class="fas fa-unlock"></i> Unblock</button>` :
-                `<button class="btn btn-sm btn-danger" onclick="blockUser(${user.id})"><i class="fas fa-ban"></i> Block</button>`
-            }
-                    ${!user.is_primary_admin ?
-                (user.is_admin ?
-                    `<button class="btn btn-sm btn-warning" onclick="removeAdmin(${user.id})" style="margin-left: 5px;"><i class="fas fa-user-minus"></i> Remove Admin</button>` :
-                    `<button class="btn btn-sm btn-primary" onclick="makeAdmin(${user.id})" style="margin-left: 5px;"><i class="fas fa-user-shield"></i> Make Admin</button>`) :
-                ''
-            }
+                <td style="white-space: nowrap; min-width: 250px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                        ${user.is_blocked ?
+                    `<button class="btn btn-sm btn-success" onclick="unblockUser(${user.id})"><i class="fas fa-unlock"></i> Unblock</button>` :
+                    `<button class="btn btn-sm btn-danger" onclick="blockUser(${user.id})"><i class="fas fa-ban"></i> Block</button>`
+                }
+                        ${!user.is_primary_admin ?
+                    (user.is_admin ?
+                        `<button class="btn btn-sm btn-warning" onclick="removeAdmin(${user.id})"><i class="fas fa-user-minus"></i> Remove Admin</button>` :
+                        `<button class="btn btn-sm btn-primary" onclick="showMakeAdminModal(${user.id})"><i class="fas fa-user-shield"></i> Make Admin</button>`) :
+                    ''
+                }
+                    </div>
                 </td>
             </tr>
         `).join('');
@@ -143,21 +195,135 @@
         }
     }
 
-    async function makeAdmin(userId) {
-        if (!confirm('Are you sure you want to make this user an admin?')) return;
+    const PERMISSIONS = {
+        upload: "Upload Files",
+        delete: "Delete Files",
+        stats: "View Statistics",
+        users: "Manage Users",
+        broadcast: "Send Broadcasts",
+        settings: "Manage Settings",
+        fsub: "Manage Force Join Channels"
+    };
+
+    function showMakeAdminModal(userId) {
+        document.getElementById('adminUserId').value = userId;
+        const permissionsList = document.getElementById('permissionsList');
+        permissionsList.innerHTML = Object.entries(PERMISSIONS).map(([key, label]) => `
+            <div style="margin: 10px 0;">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" name="permission" value="${key}" style="margin-right: 10px;">
+                    <span>${label}</span>
+                </label>
+            </div>
+        `).join('');
+        document.getElementById('makeAdminModal').style.display = 'block';
+    }
+
+    function closeMakeAdminModal() {
+        document.getElementById('makeAdminModal').style.display = 'none';
+        document.getElementById('makeAdminForm').reset();
+    }
+
+    function selectAllPermissions() {
+        document.querySelectorAll('#permissionsList input[type="checkbox"]').forEach(cb => cb.checked = true);
+    }
+
+    function deselectAllPermissions() {
+        document.querySelectorAll('#permissionsList input[type="checkbox"]').forEach(cb => cb.checked = false);
+    }
+
+    async function makeAdminWithPermissions(event) {
+        event.preventDefault();
+        const userId = parseInt(document.getElementById('adminUserId').value);
+        const selectedPermissions = Array.from(document.querySelectorAll('#permissionsList input[type="checkbox"]:checked'))
+            .map(cb => cb.value);
 
         try {
             const res = await fetch(`/admin/api/users/${userId}/make-admin`, {
                 method: 'POST',
-                credentials: 'same-origin'
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ permissions: selectedPermissions })
             });
             if (!res.ok) await handleApiError(res);
 
+            closeMakeAdminModal();
             loadUsers();
             showNotification('User promoted to admin successfully!', 'success');
         } catch (error) {
             console.error('Error making user admin:', error);
             showNotification('Error promoting user to admin', 'error');
+        }
+    }
+
+    function editPermissions(userId) {
+        const user = currentUsers.find(u => u.id === userId);
+        if (!user) return;
+
+        document.getElementById('editPermissionsUserId').value = userId;
+        const permissionsList = document.getElementById('editPermissionsList');
+        const userPermissions = user.permissions || [];
+        
+        permissionsList.innerHTML = Object.entries(PERMISSIONS).map(([key, label]) => `
+            <div style="margin: 10px 0;">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" name="permission" value="${key}" ${userPermissions.includes(key) ? 'checked' : ''} style="margin-right: 10px;">
+                    <span>${label}</span>
+                </label>
+            </div>
+        `).join('');
+        document.getElementById('editPermissionsModal').style.display = 'block';
+    }
+
+    function closeEditPermissionsModal() {
+        document.getElementById('editPermissionsModal').style.display = 'none';
+    }
+
+    function selectAllEditPermissions() {
+        document.querySelectorAll('#editPermissionsList input[type="checkbox"]').forEach(cb => cb.checked = true);
+    }
+
+    function deselectAllEditPermissions() {
+        document.querySelectorAll('#editPermissionsList input[type="checkbox"]').forEach(cb => cb.checked = false);
+    }
+
+    async function updatePermissions(event) {
+        event.preventDefault();
+        const userId = parseInt(document.getElementById('editPermissionsUserId').value);
+        const selectedPermissions = Array.from(document.querySelectorAll('#editPermissionsList input[type="checkbox"]:checked'))
+            .map(cb => cb.value);
+
+        try {
+            const res = await fetch(`/admin/api/users/${userId}/permissions`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ permissions: selectedPermissions })
+            });
+            if (!res.ok) await handleApiError(res);
+
+            closeEditPermissionsModal();
+            loadUsers();
+            showNotification('Permissions updated successfully!', 'success');
+        } catch (error) {
+            console.error('Error updating permissions:', error);
+            showNotification('Error updating permissions', 'error');
+        }
+    }
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+        const makeAdminModal = document.getElementById('makeAdminModal');
+        const editPermissionsModal = document.getElementById('editPermissionsModal');
+        if (event.target == makeAdminModal) {
+            closeMakeAdminModal();
+        }
+        if (event.target == editPermissionsModal) {
+            closeEditPermissionsModal();
         }
     }
 

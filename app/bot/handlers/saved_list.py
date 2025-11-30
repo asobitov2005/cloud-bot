@@ -1,4 +1,5 @@
 from aiogram import Router, F
+from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.bot.translations import get_text
@@ -43,11 +44,12 @@ async def handle_remove_from_list(callback: CallbackQuery, lang: str, db: AsyncS
         except:
             pass
     else:
-        await callback.answer("❌ Error", show_alert=True)
+        await callback.answer("🚫 Error", show_alert=True)
 
 
+@router.message(Command("saved"))
 @router.message(F.text.in_([
-    "⭐️ Mening ro'yxatim", "⭐️ My List", "⭐️ Мой список"
+    "📁 Mening ro'yxatim", "📁 My List", "📁 Мой список"
 ]))
 async def show_my_list(message: Message, lang: str, db: AsyncSession, db_user):
     """Show user's saved files"""
@@ -87,41 +89,40 @@ async def show_saved_list_page(message: Message, lang: str, db: AsyncSession, us
         else:
             await message.answer(get_text("no_saved_files", lang))
         return
-        
-    # Build message text
-    text = f"{get_text('my_list_title', lang)}\n\n"
     
-    for i, saved in enumerate(saved_files):
-        file = saved.file
-        # Number in the global list
-        num = (page * ITEMS_PER_PAGE) + i + 1
-        
-        # Format: 1. Title (Level) - /dl_ID
-        # We need a way to download. Let's use a deep link or command if possible.
-        # Or just show the title and provide a "Download" button below? 
-        # User asked for "1tra textda barchasini nomi" (all names in one text).
-        # And buttons 1 2 3 4 5 below.
-        # So we can't have individual download buttons for each file in the text easily unless we use links.
-        # Let's use a command like /dl_{id} or just a link if we have a web view.
-        # Since this is a bot, maybe we can make the title a link to a start param?
-        # Or just list them and user has to click something?
-        # Usually "My List" implies you can access them. 
-        # Let's add a command /get_{id} or similar that the bot handles.
-        
-        text += f"{num}. <b>{file.title}</b>"
-        if file.level:
-            text += f" [{file.level}]"
-        text += f"\n⬇️ /get_{file.id}   🗑 /del_{file.id}\n\n"
-        
+    # Send header message
+    header_text = f"{get_text('my_list_title', lang)}\n"
+    if total_pages > 1:
+        header_text += f"\n{get_text('page_info', lang, current=page + 1, total=total_pages)}"
+    
     # Pagination keyboard
     keyboard = None
     if total_pages > 1:
         keyboard = get_pagination_keyboard(page, total_pages, "saved", lang)
-        
+    
     if is_edit:
-        await message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+        # If editing, update the header message
+        await message.edit_text(header_text, reply_markup=keyboard, parse_mode="HTML")
     else:
-        await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+        # Send header message
+        await message.answer(header_text, reply_markup=keyboard, parse_mode="HTML")
+    
+    # Send each file as a separate message with inline buttons
+    for i, saved in enumerate(saved_files):
+        file = saved.file
+        
+        # Build file info text
+        text = f"<b>{file.title}</b>"
+        if file.level:
+            text += f"\n📊 {get_text('level', lang)}: {file.level}"
+        if file.description:
+            text += f"\n\n{file.description}"
+        
+        # Get keyboard with download and remove buttons
+        file_keyboard = get_file_actions_keyboard(file.id, lang, show_remove=True)
+        
+        # Send file info with buttons
+        await message.answer(text, reply_markup=file_keyboard, parse_mode="HTML")
 
 
 @router.message(F.text.regexp(r"^/get_(\d+)$"))
@@ -141,21 +142,8 @@ async def handle_get_file_command(message: Message, lang: str, db: AsyncSession)
     
     keyboard = get_file_actions_keyboard(file.id, lang, show_remove=True)
     
-    # Get appropriate thumbnail (file's own or default if ≤20MB)
-    from app.bot.helpers import get_thumbnail_for_file
-    from app.bot.main import _bot_instance
-    
-    thumbnail_to_use = await get_thumbnail_for_file(
-        _bot_instance, 
-        file.file_id, 
-        file.thumbnail_id, 
-        db
-    )
-    
-    if thumbnail_to_use:
-        await message.answer_photo(thumbnail_to_use, caption=caption, reply_markup=keyboard, parse_mode="HTML")
-    else:
-        await message.answer(caption, reply_markup=keyboard, parse_mode="HTML")
+    # Send file info (thumbnail removed from message as it's already on the file)
+    await message.answer(caption, reply_markup=keyboard, parse_mode="HTML")
     
     # Send actual file - REMOVED as per user request (user can click download button)
     # await message.answer_document(file.file_id)
@@ -173,4 +161,4 @@ async def handle_del_file_command(message: Message, lang: str, db: AsyncSession,
         # Refresh list? Maybe just let user click "My List" again or refresh current page if they are on it.
         # Ideally we should refresh the list message if we knew which one it was.
     else:
-        await message.answer("❌ Error or not found")
+        await message.answer("🚫 Error or not found")

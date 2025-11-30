@@ -24,9 +24,6 @@ def get_main_menu_keyboard(lang: str = "uz") -> ReplyKeyboardMarkup:
         keyboard=[
             [
                 KeyboardButton(text=get_text("btn_search", lang)),
-                KeyboardButton(text=get_text("btn_my_downloads", lang))
-            ],
-            [
                 KeyboardButton(text=get_text("btn_my_list", lang))
             ],
             [

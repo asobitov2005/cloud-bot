@@ -29,6 +29,12 @@
                 <a href="/admin/users" class="nav-item {% if request.url.path == '/admin/users' %}active{% endif %}">
                     <span><i class="fas fa-users"></i></span> Users
                 </a>
+                <a href="/admin/fsub" class="nav-item {% if request.url.path == '/admin/fsub' %}active{% endif %}">
+                    <span><i class="fas fa-bullhorn"></i></span> Force Join
+                </a>
+                <a href="/admin/settings" class="nav-item {% if request.url.path == '/admin/settings' %}active{% endif %}">
+                    <span><i class="fas fa-cog"></i></span> Settings
+                </a>
                 <a href="/admin/logout" class="nav-item">
                     <span><i class="fas fa-sign-out-alt"></i></span> Logout
                 </a>

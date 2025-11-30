@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import auth, dashboard, files, users_api
+from app.api.routes import auth, dashboard, files, users_api, fsub, admin_settings
 from app.core.config import settings
 
 
@@ -41,6 +41,8 @@ app.include_router(auth.router, prefix="/admin", tags=["auth"])
 app.include_router(dashboard.router, prefix="/admin", tags=["dashboard"])
 app.include_router(files.router, prefix="/admin", tags=["files"])
 app.include_router(users_api.router, prefix="/admin", tags=["users"])
+app.include_router(fsub.router, prefix="/admin", tags=["fsub"])
+app.include_router(admin_settings.router, prefix="/admin", tags=["settings"])
 
 
 @app.get("/")

@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import signal
+import sys
 from contextlib import asynccontextmanager
 from app.bot.main import main as bot_main_func
 from app.api.main import app
@@ -106,7 +107,7 @@ async def main():
     api_task = asyncio.create_task(run_api(), name="api")
     tasks = [bot_task, api_task]
     
-    # Setup signal handlers
+    # Setup signal handlers (Windows-compatible)
     def signal_handler(sig):
         global should_shutdown
         if should_shutdown:
@@ -115,14 +116,24 @@ async def main():
             os._exit(1)
         
         should_shutdown = True
-        logger.info(f"\n👋 Received signal {signal.Signals(sig).name}")
+        try:
+            sig_name = signal.Signals(sig).name
+        except (ValueError, AttributeError):
+            sig_name = str(sig)
+        logger.info(f"\n👋 Received signal {sig_name}")
         
         # Create shutdown task
         asyncio.create_task(shutdown(tasks))
     
-    loop = asyncio.get_running_loop()
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, lambda s=sig: signal_handler(s))
+    # Only add signal handlers on Unix systems (Windows doesn't support add_signal_handler)
+    if sys.platform != 'win32':
+        loop = asyncio.get_running_loop()
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            try:
+                loop.add_signal_handler(sig, lambda s=sig: signal_handler(s))
+            except NotImplementedError:
+                # Fallback if signal handler not supported
+                pass
     
     try:
         # Wait for all tasks to complete

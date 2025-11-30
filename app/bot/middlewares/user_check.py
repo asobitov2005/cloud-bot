@@ -41,10 +41,41 @@ class UserCheckMiddleware(BaseMiddleware):
             # Check if user is blocked
             if db_user.is_blocked:
                 from app.bot.translations import get_text
+                from app.models.crud import get_setting
+                
+                # Get admin display username from settings
+                admin_username = "admin"  # Default fallback
+                try:
+                    # First try to get custom display username from settings
+                    display_username = await get_setting(db, "admin_display_username")
+                    if display_username:
+                        admin_username = display_username
+                    else:
+                        # Fallback to Telegram username
+                        from app.core.config import settings
+                        from sqlalchemy import select
+                        from app.models.base import User
+                        
+                        # Try to get primary admin user
+                        admin_user = await get_user_by_telegram_id(db, settings.ADMIN_ID)
+                        if admin_user and admin_user.username:
+                            admin_username = admin_user.username
+                        else:
+                            # Try to get any admin user
+                            result = await db.execute(
+                                select(User).where(User.is_admin == True).limit(1)
+                            )
+                            admin_user = result.scalar_one_or_none()
+                            if admin_user and admin_user.username:
+                                admin_username = admin_user.username
+                except Exception:
+                    pass  # Use default if can't get admin username
+                
+                blocked_text = get_text("you_are_blocked", db_user.language, admin_username=admin_username)
                 if isinstance(event, Message):
-                    await event.answer(get_text("you_are_blocked", db_user.language))
+                    await event.answer(blocked_text)
                 elif isinstance(event, CallbackQuery):
-                    await event.answer(get_text("you_are_blocked", db_user.language), show_alert=True)
+                    await event.answer(blocked_text, show_alert=True)
                 return
             
             # Add user to data

@@ -12,9 +12,11 @@ class User(Base):
     username = Column(String, nullable=True)
     full_name = Column(String, nullable=True)
     language = Column(String, default="uz")
+    gender = Column(String, nullable=True)  # 'male', 'female', 'other', or None
     joined_at = Column(DateTime, default=datetime.utcnow)
     is_blocked = Column(Boolean, default=False)
     is_admin = Column(Boolean, default=False, index=True)
+    admin_permissions = Column(Text, nullable=True)  # JSON string of permissions
 
     downloads = relationship("Download", back_populates="user")
     saved_files = relationship("SavedList", back_populates="user")
@@ -32,6 +34,7 @@ class File(Base):
     tags = Column(String, nullable=True) # Comma separated tags
     description = Column(Text, nullable=True)
     thumbnail_id = Column(String, nullable=True) # Telegram file_id for thumbnail
+    processed_file_id = Column(String, nullable=True) # Pre-processed file with thumbnail and renamed
     created_at = Column(DateTime, default=datetime.utcnow)
     downloads_count = Column(Integer, default=0)
 

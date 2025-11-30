@@ -69,6 +69,7 @@ async def update_user_commands(telegram_id: int, is_admin: bool):
         BotCommand(command="help", description="Get help"),
         BotCommand(command="search", description="Search files"),
         BotCommand(command="saved", description="View saved files"),
+        BotCommand(command="stats", description="View bot statistics"),
     ]
     
     # Admin commands
@@ -77,6 +78,10 @@ async def update_user_commands(telegram_id: int, is_admin: bool):
         BotCommand(command="delete", description="Delete file"),
         BotCommand(command="stats", description="View statistics"),
         BotCommand(command="broadcast", description="Broadcast message"),
+        BotCommand(command="fsub", description="Manage force subscribe channels"),
+        BotCommand(command="add_fsub", description="Add force subscribe channel"),
+        BotCommand(command="set_thumb", description="Set thumbnail"),
+        BotCommand(command="del_thumb", description="Delete thumbnail"),
         BotCommand(command="cancel", description="Cancel operation"),
     ]
     

@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.database import get_db
 from datetime import timedelta
 from app.api.auth import create_access_token, get_password_hash, verify_password
 from app.core.config import settings
@@ -17,10 +19,31 @@ async def login_page(request: Request):
 
 
 @router.post("/login")
-async def login(username: str = Form(...), password: str = Form(...)):
+async def login(username: str = Form(...), password: str = Form(...), db: AsyncSession = Depends(get_db)):
     """Handle login"""
-    # Check credentials
-    if username != settings.ADMIN_USERNAME or password != settings.ADMIN_PASSWORD:
+    from app.models.crud import get_setting
+    from app.api.auth import verify_password
+    
+    # Get admin credentials from database
+    admin_username = await get_setting(db, "admin_username")
+    admin_password_hash = await get_setting(db, "admin_password_hash")
+    
+    # If no credentials in database, use defaults and initialize
+    if not admin_username:
+        # Initialize with default credentials
+        from app.models.crud import set_setting
+        from app.api.auth import get_password_hash
+        await set_setting(db, "admin_username", settings.ADMIN_USERNAME)
+        await set_setting(db, "admin_password_hash", get_password_hash(settings.ADMIN_PASSWORD))
+        admin_username = settings.ADMIN_USERNAME
+        admin_password_hash = get_password_hash(settings.ADMIN_PASSWORD)
+    
+    # Check username
+    if username != admin_username:
+        return RedirectResponse(url="/admin/login?error=1", status_code=303)
+    
+    # Check password (verify against hash)
+    if not verify_password(password, admin_password_hash):
         return RedirectResponse(url="/admin/login?error=1", status_code=303)
     
     # Create access token

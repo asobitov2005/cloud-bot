@@ -16,12 +16,12 @@ async def cmd_delete(message: Message, lang: str, db: AsyncSession):
     try:
         parts = message.text.split(maxsplit=1)
         if len(parts) < 2:
-            await message.answer("❌ Usage: /delete <file_id>")
+            await message.answer("🚫 Usage: /delete <file_id>")
             return
         
         file_id = int(parts[1])
     except ValueError:
-        await message.answer("❌ Invalid file ID")
+        await message.answer("🚫 Invalid file ID")
         return
     
     # Delete file

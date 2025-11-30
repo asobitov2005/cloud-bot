@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block fsub_active %}active{% endblock %}
+{% block page_title %}Force Join Channels{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>Force Join Channels</h1>
+    <button class="btn btn-primary" onclick="showAddChannelModal()">
+        <i class="fas fa-plus"></i> Add Channel
+    </button>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Username</th>
+                <th>Invite Link</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="fsubTableBody">
+            <tr>
+                <td colspan="5" class="text-center">Loading...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Add Channel Modal -->
+<div id="addChannelModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddChannelModal()">&times;</span>
+        <h2>Add Force Join Channel</h2>
+        <form id="addChannelForm" onsubmit="addChannel(event)">
+            <div class="form-group">
+                <label>Channel ID (Optional)</label>
+                <input type="text" id="channelId" placeholder="e.g., -1001234567890" />
+                <small>Will be auto-detected from username or invite link if not provided</small>
+            </div>
+            <div class="form-group">
+                <label>Channel Title</label>
+                <input type="text" id="channelTitle" placeholder="Channel Name" />
+            </div>
+            <div class="form-group">
+                <label>Channel Username</label>
+                <input type="text" id="channelUsername" placeholder="@channelname" />
+            </div>
+            <div class="form-group">
+                <label>Invite Link (Optional)</label>
+                <input type="text" id="inviteLink" placeholder="https://t.me/joinchat/..." />
+                <small>Use invite link to track how many users joined through this link</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Channel</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentChannels = [];
+
+    async function loadFsubChannels() {
+        try {
+            const response = await fetch('/admin/api/fsub', {
+                credentials: 'same-origin'
+            });
+            if (!response.ok) await handleApiError(response);
+            const data = await response.json();
+            currentChannels = data.channels;
+            renderChannels(currentChannels);
+        } catch (error) {
+            console.error('Error loading channels:', error);
+            showNotification('Error loading channels', 'error');
+        }
+    }
+
+    function renderChannels(channels) {
+        const tbody = document.getElementById('fsubTableBody');
+        
+        if (channels.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">No force join channels configured</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = channels.map(channel => `
+            <tr>
+                <td>${channel.channel_id}</td>
+                <td>${channel.channel_title || 'N/A'}</td>
+                <td>${channel.channel_username ? '@' + channel.channel_username : 'N/A'}</td>
+                <td>${channel.invite_link ? `<a href="${channel.invite_link}" target="_blank">${channel.invite_link.substring(0, 40)}...</a>` : 'N/A'}</td>
+                <td>
+                    <button class="btn btn-sm btn-danger" onclick="removeChannel(${channel.channel_id})">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function showAddChannelModal() {
+        document.getElementById('addChannelModal').style.display = 'block';
+    }
+
+    function closeAddChannelModal() {
+        document.getElementById('addChannelModal').style.display = 'none';
+        // Clear all form fields
+        document.getElementById('channelId').value = '';
+        document.getElementById('channelTitle').value = '';
+        document.getElementById('channelUsername').value = '';
+        document.getElementById('inviteLink').value = '';
+    }
+
+    async function addChannel(event) {
+        event.preventDefault();
+        
+        const channelId = document.getElementById('channelId').value.trim();
+        const channelTitle = document.getElementById('channelTitle').value.trim();
+        const channelUsername = document.getElementById('channelUsername').value.trim().replace('@', '');
+        const inviteLink = document.getElementById('inviteLink').value.trim();
+
+        if (!channelId && !channelUsername && !inviteLink) {
+            showNotification('Please provide at least one: Channel ID, Username, or Invite Link', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/api/fsub', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    channel_id: channelId || null,
+                    channel_title: channelTitle || null,
+                    channel_username: channelUsername || null,
+                    invite_link: inviteLink || null
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Failed to add channel');
+            }
+
+            showNotification('Channel added successfully', 'success');
+            closeAddChannelModal();
+            loadFsubChannels();
+        } catch (error) {
+            console.error('Error adding channel:', error);
+            showNotification(error.message || 'Error adding channel', 'error');
+        }
+    }
+
+    async function removeChannel(channelId) {
+        if (!confirm('Are you sure you want to remove this channel?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/admin/api/fsub/${channelId}`, {
+                method: 'DELETE',
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) await handleApiError(response);
+
+            showNotification('Channel removed successfully', 'success');
+            loadFsubChannels();
+        } catch (error) {
+            console.error('Error removing channel:', error);
+            showNotification('Error removing channel', 'error');
+        }
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('addChannelModal');
+        if (event.target == modal) {
+            closeAddChannelModal();
+        }
+    }
+
+    // Load channels on page load
+    document.addEventListener('DOMContentLoaded', loadFsubChannels);
+</script>
+{% endblock %}
+

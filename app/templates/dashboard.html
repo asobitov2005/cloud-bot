@@ -39,6 +39,98 @@
             <p>Total Downloads</p>
         </div>
     </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-hdd text-white"></i>
+        </div>
+        <div class="stat-info">
+            <h3 id="total-files-volume">-</h3>
+            <p>Total Files Volume</p>
+        </div>
+    </div>
+</div>
+
+<!-- Users Joined/Left Stats - Clean Design -->
+<div class="user-stats-container" style="margin-top: 20px; margin-bottom: 2rem;">
+    <div class="user-stats-section">
+        <div class="user-stats-header">
+            <div class="user-stats-icon-simple joined-icon-simple">
+                <i class="fas fa-user"></i>
+                <span class="user-stats-icon-badge joined-badge">+</span>
+            </div>
+            <h3 class="user-stats-title-simple">Joined Users</h3>
+        </div>
+        <div class="user-stats-items">
+            <div class="user-stats-row">
+                <span class="user-stats-label-simple">Today:</span>
+                <span class="user-stats-number joined-number">
+                    <span class="user-stats-sign-simple">+</span>
+                    <span id="users-joined-today">0</span>
+                </span>
+            </div>
+            <div class="user-stats-row">
+                <span class="user-stats-label-simple">This Week:</span>
+                <span class="user-stats-number joined-number">
+                    <span class="user-stats-sign-simple">+</span>
+                    <span id="users-joined-week">0</span>
+                </span>
+            </div>
+            <div class="user-stats-row">
+                <span class="user-stats-label-simple">This Month:</span>
+                <span class="user-stats-number joined-number">
+                    <span class="user-stats-sign-simple">+</span>
+                    <span id="users-joined-month">0</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="user-stats-section">
+        <div class="user-stats-header">
+            <div class="user-stats-icon-simple left-icon-simple">
+                <i class="fas fa-user"></i>
+                <span class="user-stats-icon-badge left-badge">-</span>
+            </div>
+            <h3 class="user-stats-title-simple">Left Users</h3>
+        </div>
+        <div class="user-stats-items">
+            <div class="user-stats-row">
+                <span class="user-stats-label-simple">Today:</span>
+                <span class="user-stats-number left-number">
+                    <span class="user-stats-sign-simple">-</span>
+                    <span id="users-left-today">0</span>
+                </span>
+            </div>
+            <div class="user-stats-row">
+                <span class="user-stats-label-simple">This Week:</span>
+                <span class="user-stats-number left-number">
+                    <span class="user-stats-sign-simple">-</span>
+                    <span id="users-left-week">0</span>
+                </span>
+            </div>
+            <div class="user-stats-row">
+                <span class="user-stats-label-simple">This Month:</span>
+                <span class="user-stats-number left-number">
+                    <span class="user-stats-sign-simple">-</span>
+                    <span id="users-left-month">0</span>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Health Check Stats -->
+<div class="stats-grid" style="margin-top: 20px;">
+    <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+        <div class="stat-icon">
+            <i class="fas fa-exclamation-triangle text-white"></i>
+        </div>
+        <div class="stat-info">
+            <h3 id="total-errors">-</h3>
+            <p>Total Errors (30 days)</p>
+        </div>
+    </div>
 </div>
 
 <!-- Charts Grid -->
@@ -49,8 +141,45 @@
     </div>
 
     <div class="chart-card">
+        <h3><i class="fas fa-user-plus"></i> User Statistics</h3>
+        <canvas id="userStatisticsChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <h3><i class="fas fa-globe"></i> Users by Country</h3>
+        <canvas id="userCountryChart"></canvas>
+    </div>
+
+
+    <div class="chart-card">
         <h3><i class="fas fa-trophy"></i> Top Files</h3>
         <canvas id="topFilesChart"></canvas>
+    </div>
+</div>
+
+<!-- Download Period Charts -->
+<div class="charts-grid" style="margin-top: 20px;">
+    <div class="chart-card">
+        <h3><i class="fas fa-calendar-day"></i> Daily Downloads (30 days)</h3>
+        <canvas id="dailyDownloadsChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <h3><i class="fas fa-calendar-week"></i> Weekly Downloads (12 weeks)</h3>
+        <canvas id="weeklyDownloadsChart"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <h3><i class="fas fa-calendar-alt"></i> Monthly Downloads (12 months)</h3>
+        <canvas id="monthlyDownloadsChart"></canvas>
+    </div>
+</div>
+
+<!-- Health Check Chart -->
+<div class="charts-grid" style="margin-top: 20px;">
+    <div class="chart-card">
+        <h3><i class="fas fa-heartbeat"></i> Health Check - Errors Over Time</h3>
+        <canvas id="healthCheckChart"></canvas>
     </div>
 </div>
 {% endblock %}
@@ -72,14 +201,54 @@
             document.getElementById('total-users').textContent = formatNumber(data.total_users);
             document.getElementById('total-files').textContent = formatNumber(data.total_files);
             document.getElementById('total-downloads').textContent = formatNumber(data.total_downloads);
+            document.getElementById('total-files-volume').textContent = data.total_files_volume?.formatted || '0 B';
+            
+            // Users joined stats (compact)
+            if (data.users_joined) {
+                document.getElementById('users-joined-today').textContent = formatNumber(data.users_joined.today);
+                document.getElementById('users-joined-week').textContent = formatNumber(data.users_joined.week);
+                document.getElementById('users-joined-month').textContent = formatNumber(data.users_joined.month);
+            }
+            // Users left stats (compact)
+            if (data.users_left) {
+                document.getElementById('users-left-today').textContent = formatNumber(data.users_left.today);
+                document.getElementById('users-left-week').textContent = formatNumber(data.users_left.week);
+                document.getElementById('users-left-month').textContent = formatNumber(data.users_left.month);
+            }
+            
+            // Health stats
+            if (data.health_stats) {
+                document.getElementById('total-errors').textContent = formatNumber(data.health_stats.total_errors || 0);
+            }
 
             // Render charts
             renderDownloadsChart(data.downloads_chart);
+            renderUserStatisticsChart(data.user_growth_chart);
+            renderUserCountryChart(data.user_country_chart);
             renderTopFilesChart(data.top_files);
+            
+            // Render download period charts
+            if (data.downloads_by_period) {
+                if (data.downloads_by_period.daily) {
+                    renderDailyDownloadsChart(data.downloads_by_period.daily);
+                }
+                if (data.downloads_by_period.weekly) {
+                    renderWeeklyDownloadsChart(data.downloads_by_period.weekly);
+                }
+                if (data.downloads_by_period.monthly) {
+                    renderMonthlyDownloadsChart(data.downloads_by_period.monthly);
+                }
+            }
+            
+            // Render health check chart
+            if (data.health_stats) {
+                renderHealthCheckChart(data.health_stats);
+            }
 
         } catch (error) {
             console.error('Error loading dashboard data:', error);
-            showNotification('Error loading dashboard data', 'error');
+            console.error('Error details:', error.message, error.stack);
+            showNotification('Error loading dashboard data: ' + error.message, 'error');
         }
     }
 
@@ -122,6 +291,110 @@
         });
     }
 
+    function renderUserStatisticsChart(data) {
+        const ctx = document.getElementById('userStatisticsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'New Users',
+                    data: data.values,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#10b981',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'New Users: ' + context.parsed.y;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        },
+                        grid: {
+                            borderDash: [2, 4]
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderUserCountryChart(data) {
+        const ctx = document.getElementById('userCountryChart').getContext('2d');
+        
+        // Map language codes to country names
+        const countryMap = {
+            'uz': 'Uzbekistan',
+            'en': 'English Speaking',
+            'ru': 'Russia'
+        };
+        
+        const labels = data.labels.map(lang => countryMap[lang] || lang.toUpperCase());
+        const colors = ['#667eea', '#764ba2', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+        
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data.values,
+                    backgroundColor: colors.slice(0, data.values.length),
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     function renderTopFilesChart(data) {
         const ctx = document.getElementById('topFilesChart').getContext('2d');
         new Chart(ctx, {
@@ -154,6 +427,166 @@
                     x: {
                         grid: {
                             display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderDailyDownloadsChart(data) {
+        const ctx = document.getElementById('dailyDownloadsChart').getContext('2d');
+        const labels = data.map(row => {
+            const date = new Date(row.date);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+        const values = data.map(row => row.count);
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Downloads',
+                    data: values,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderWeeklyDownloadsChart(data) {
+        const ctx = document.getElementById('weeklyDownloadsChart').getContext('2d');
+        const labels = data.map(row => row.period);
+        const values = data.map(row => row.count);
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Downloads',
+                    data: values,
+                    backgroundColor: '#10b981',
+                    borderColor: '#059669',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderMonthlyDownloadsChart(data) {
+        const ctx = document.getElementById('monthlyDownloadsChart').getContext('2d');
+        const labels = data.map(row => {
+            const [year, month] = row.period.split('-');
+            const date = new Date(year, month - 1);
+            return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        });
+        const values = data.map(row => row.count);
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Downloads',
+                    data: values,
+                    backgroundColor: '#8b5cf6',
+                    borderColor: '#7c3aed',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderHealthCheckChart(data) {
+        const ctx = document.getElementById('healthCheckChart').getContext('2d');
+        const labels = data.errors_by_day.map(row => {
+            const date = new Date(row.date);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+        const values = data.errors_by_day.map(row => row.count);
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Errors',
+                    data: values,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#ef4444'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
                         }
                     }
                 }

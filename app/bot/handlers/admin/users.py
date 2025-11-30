@@ -18,7 +18,7 @@ async def cmd_users(message: Message, lang: str, db: AsyncSession):
     users = await get_all_users(db, skip=0, limit=50)
     
     if not users:
-        await message.answer("❌ No users found")
+        await message.answer("🚫 No users found")
         return
     
     # Send header

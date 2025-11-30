@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./bot.db"  # Default to SQLite, override with POSTGRES_URL for PostgreSQL
     POSTGRES_HOST: str = "localhost"
-    POSTGRES_PORT: int = 5433
+    POSTGRES_PORT: int = 5432
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "1122"
     POSTGRES_DB: str = "bot_db"

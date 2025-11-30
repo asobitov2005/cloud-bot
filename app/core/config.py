@@ -76,14 +76,13 @@ class Settings(BaseSettings):
     # Security
     SECRET_KEY: str = "supersecretkey"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    ADMIN_USERNAME: str = "admin"
-    ADMIN_PASSWORD: str = "admin"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 100
+
     
     # Admin Panel
     ADMIN_PANEL_HOST: str = "0.0.0.0"
     ADMIN_PANEL_PORT: int = 8000
-    ADMIN_PANEL_USERNAME: str = "admin"  # For help display
+    
     
     # Pagination
     FILES_PER_PAGE: int = 5

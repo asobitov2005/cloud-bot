@@ -186,9 +186,9 @@ async def handle_search_pagination(callback: CallbackQuery, lang: str, db: Async
     # Send updated results
     try:
         # Edit the message with new results
-        total_pages = math.ceil(len(files) / 3)
-        start_idx = page * 3
-        end_idx = start_idx + 3
+        total_pages = math.ceil(len(files) / 10)
+        start_idx = page * 10
+        end_idx = start_idx + 10
         page_files = files[start_idx:end_idx]
         
         # Build header with search info
@@ -225,9 +225,9 @@ async def send_search_results(message: Message, files: list, page: int,
     if file_sizes is None:
         file_sizes = {}
     
-    total_pages = math.ceil(len(files) / 3)  # Show 10 results per page
-    start_idx = page * 3
-    end_idx = start_idx + 3
+    total_pages = math.ceil(len(files) / 10)  # Show 10 results per page
+    start_idx = page * 10
+    end_idx = start_idx + 10
     page_files = files[start_idx:end_idx]
     
     # Build header with search info

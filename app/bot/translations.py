@@ -239,11 +239,6 @@ PrimeLingoBot - бот для поиска и загрузки книг и ма�
         "en": "🖼 Send thumbnail image (or /skip):",
         "ru": "🖼 Отправьте изображение миниатюры (или /skip):"
     },
-    "upload_enter_level": {
-        "uz": "📊 Darajani kiriting (A1, A2, B1, B2, C1, C2 yoki /skip):",
-        "en": "📊 Enter level (A1, A2, B1, B2, C1, C2 or /skip):",
-        "ru": "📊 Введите уровень (A1, A2, B1, B2, C1, C2 или /skip):"
-    },
     "upload_enter_tags": {
         "uz": "🏷 Teglarni kiriting (vergul bilan ajratilgan, yoki /skip):",
         "en": "🏷 Enter tags (comma-separated, or /skip):",
@@ -253,11 +248,6 @@ PrimeLingoBot - бот для поиска и загрузки книг и ма�
         "uz": "📄 Tavsifni kiriting (yoki /skip):",
         "en": "📄 Enter description (or /skip):",
         "ru": "📄 Введите описание (или /skip):"
-    },
-    "upload_file_type": {
-        "uz": "📁 Fayl turi: regular yoki mock_test?",
-        "en": "📁 File type: regular or mock_test?",
-        "ru": "📁 Тип файла: regular или mock_test?"
     },
     "upload_success": {
         "uz": "✅ Fayl muvaffaqiyatli yuklandi!\n\n📝 Nom: {title}\n🏷 Teglar: {tags}",

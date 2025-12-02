@@ -5,14 +5,14 @@
 
 {% block content %}
 <div class="content-header">
-    <h1>Dashboard</h1>
+    <h1><i class="fas fa-chart-line"></i> Dashboard</h1>
 </div>
 
 <!-- Stats Grid -->
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-icon">
-            <i class="fas fa-users text-white"></i>
+            <i class="fas fa-users"></i>
         </div>
         <div class="stat-info">
             <h3 id="total-users">-</h3>
@@ -22,7 +22,7 @@
 
     <div class="stat-card">
         <div class="stat-icon">
-            <i class="fas fa-file-alt text-white"></i>
+            <i class="fas fa-file-alt"></i>
         </div>
         <div class="stat-info">
             <h3 id="total-files">-</h3>
@@ -32,7 +32,7 @@
 
     <div class="stat-card">
         <div class="stat-icon">
-            <i class="fas fa-download text-white"></i>
+            <i class="fas fa-download"></i>
         </div>
         <div class="stat-info">
             <h3 id="total-downloads">-</h3>
@@ -42,7 +42,7 @@
 
     <div class="stat-card">
         <div class="stat-icon">
-            <i class="fas fa-hdd text-white"></i>
+            <i class="fas fa-hdd"></i>
         </div>
         <div class="stat-info">
             <h3 id="total-files-volume">-</h3>
@@ -202,7 +202,7 @@
             document.getElementById('total-files').textContent = formatNumber(data.total_files);
             document.getElementById('total-downloads').textContent = formatNumber(data.total_downloads);
             document.getElementById('total-files-volume').textContent = data.total_files_volume?.formatted || '0 B';
-            
+
             // Users joined stats (compact)
             if (data.users_joined) {
                 document.getElementById('users-joined-today').textContent = formatNumber(data.users_joined.today);
@@ -215,7 +215,7 @@
                 document.getElementById('users-left-week').textContent = formatNumber(data.users_left.week);
                 document.getElementById('users-left-month').textContent = formatNumber(data.users_left.month);
             }
-            
+
             // Health stats
             if (data.health_stats) {
                 document.getElementById('total-errors').textContent = formatNumber(data.health_stats.total_errors || 0);
@@ -226,7 +226,7 @@
             renderUserStatisticsChart(data.user_growth_chart);
             renderUserCountryChart(data.user_country_chart);
             renderTopFilesChart(data.top_files);
-            
+
             // Render download period charts
             if (data.downloads_by_period) {
                 if (data.downloads_by_period.daily) {
@@ -239,7 +239,7 @@
                     renderMonthlyDownloadsChart(data.downloads_by_period.monthly);
                 }
             }
-            
+
             // Render health check chart
             if (data.health_stats) {
                 renderHealthCheckChart(data.health_stats);
@@ -319,7 +319,7 @@
                     },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 return 'New Users: ' + context.parsed.y;
                             }
                         }
@@ -347,17 +347,17 @@
 
     function renderUserCountryChart(data) {
         const ctx = document.getElementById('userCountryChart').getContext('2d');
-        
+
         // Map language codes to country names
         const countryMap = {
             'uz': 'Uzbekistan',
             'en': 'English Speaking',
             'ru': 'Russia'
         };
-        
+
         const labels = data.labels.map(lang => countryMap[lang] || lang.toUpperCase());
         const colors = ['#667eea', '#764ba2', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-        
+
         new Chart(ctx, {
             type: 'pie',
             data: {
@@ -381,7 +381,7 @@
                     },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 const label = context.label || '';
                                 const value = context.parsed || 0;
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
@@ -441,7 +441,7 @@
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         });
         const values = data.map(row => row.count);
-        
+
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -479,7 +479,7 @@
         const ctx = document.getElementById('weeklyDownloadsChart').getContext('2d');
         const labels = data.map(row => row.period);
         const values = data.map(row => row.count);
-        
+
         new Chart(ctx, {
             type: 'bar',
             data: {
@@ -519,7 +519,7 @@
             return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
         });
         const values = data.map(row => row.count);
-        
+
         new Chart(ctx, {
             type: 'bar',
             data: {
@@ -558,7 +558,7 @@
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         });
         const values = data.errors_by_day.map(row => row.count);
-        
+
         new Chart(ctx, {
             type: 'line',
             data: {

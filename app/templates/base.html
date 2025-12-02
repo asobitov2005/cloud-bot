@@ -12,7 +12,7 @@
 
 <body>
     <div class="container">
-        <!-- Sidebar -->
+        <!-- Modern Sidebar -->
         <nav class="sidebar">
             <div class="sidebar-header">
                 <h2><i class="fas fa-robot"></i> PrimeLingo</h2>
@@ -32,7 +32,8 @@
                 <a href="/admin/fsub" class="nav-item {% if request.url.path == '/admin/fsub' %}active{% endif %}">
                     <span><i class="fas fa-bullhorn"></i></span> Force Join
                 </a>
-                <a href="/admin/settings" class="nav-item {% if request.url.path == '/admin/settings' %}active{% endif %}">
+                <a href="/admin/settings"
+                    class="nav-item {% if request.url.path == '/admin/settings' %}active{% endif %}">
                     <span><i class="fas fa-cog"></i></span> Settings
                 </a>
                 <a href="/admin/logout" class="nav-item">

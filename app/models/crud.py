@@ -1,5 +1,5 @@
 from typing import Optional, List, Dict, Any
-from sqlalchemy import select, func, desc, or_, and_, text, cast, Date
+from sqlalchemy import select, func, desc, or_, and_, text, cast, Date, String
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
@@ -72,9 +72,37 @@ async def get_all_users(db: AsyncSession, skip: int = 0, limit: int = 50,
     return result.scalars().all()
 
 
-async def get_users_count(db: AsyncSession) -> int:
-    """Get total users count"""
-    result = await db.execute(select(func.count(User.id)))
+async def search_users(db: AsyncSession, query: str, skip: int = 0, limit: int = 50) -> List[User]:
+    """Search users by username, full name, or telegram_id"""
+    search_filter = or_(
+        User.username.ilike(f"%{query}%"),
+        User.full_name.ilike(f"%{query}%"),
+        cast(User.telegram_id, String).ilike(f"%{query}%")
+    )
+    
+    result = await db.execute(
+        select(User)
+        .where(search_filter)
+        .offset(skip)
+        .limit(limit)
+        .order_by(desc(User.joined_at))
+    )
+    return result.scalars().all()
+
+
+async def get_users_count(db: AsyncSession, query: str = None) -> int:
+    """Get total users count, optionally filtered by search query"""
+    stmt = select(func.count(User.id))
+    
+    if query:
+        search_filter = or_(
+            User.username.ilike(f"%{query}%"),
+            User.full_name.ilike(f"%{query}%"),
+            cast(User.telegram_id, String).ilike(f"%{query}%")
+        )
+        stmt = stmt.where(search_filter)
+        
+    result = await db.execute(stmt)
     return result.scalar()
 
 

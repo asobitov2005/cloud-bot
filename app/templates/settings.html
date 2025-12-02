@@ -5,71 +5,34 @@
 
 {% block content %}
 <div class="content-header">
-    <h1><i class="fas fa-cog"></i> Admin Settings</h1>
+    <small>This will be shown to users in bot messages</small>
+</div>
+<button class="btn btn-primary" onclick="updateDisplayUsername()">
+    <i class="fas fa-save"></i> Update Display Username
+</button>
 </div>
 
-<div class="settings-container">
-    <!-- Username Section -->
-    <div class="modern-card" style="margin-bottom: 2rem;">
-        <h2><i class="fas fa-user"></i> Username</h2>
-        <div class="form-group">
-            <label>Current Username</label>
-            <input type="text" id="currentUsername" class="modern-input" readonly />
-        </div>
-        <div class="form-group">
-            <label>New Username</label>
-            <input type="text" id="newUsername" class="modern-input" placeholder="Enter new username" />
-            <small>Username must be at least 3 characters</small>
-        </div>
-        <button class="btn btn-primary" onclick="updateUsername()">
-            <i class="fas fa-save"></i> Update Username
-        </button>
+<!-- Password Section -->
+<div class="modern-card" style="margin-bottom: 2rem;">
+    <h2><i class="fas fa-lock"></i> Password</h2>
+    <div class="form-group">
+        <label>Current Password</label>
+        <input type="password" id="currentPassword" class="modern-input" placeholder="Enter current password" />
+        <small>Leave empty if setting password for the first time</small>
     </div>
-
-    <!-- Display Username Section -->
-    <div class="modern-card" style="margin-bottom: 2rem;">
-        <h2><i class="fas fa-at"></i> Display Username</h2>
-        <p style="color: #666; margin-bottom: 15px;">
-            This username will be shown in bot messages (help section, blocked user messages, etc.) instead of your
-            Telegram username.
-        </p>
-        <div class="form-group">
-            <label>Current Display Username</label>
-            <input type="text" id="currentDisplayUsername" class="modern-input" readonly />
-            <small>Leave empty to use your Telegram username</small>
-        </div>
-        <div class="form-group">
-            <label>New Display Username</label>
-            <input type="text" id="newDisplayUsername" class="modern-input"
-                placeholder="Enter display username (e.g., @SupportBot)" />
-            <small>This will be shown to users in bot messages</small>
-        </div>
-        <button class="btn btn-primary" onclick="updateDisplayUsername()">
-            <i class="fas fa-save"></i> Update Display Username
-        </button>
+    <div class="form-group">
+        <label>New Password</label>
+        <input type="password" id="newPassword" class="modern-input" placeholder="Enter new password" />
+        <small>Password must be at least 6 characters</small>
     </div>
-
-    <!-- Password Section -->
-    <div class="modern-card" style="margin-bottom: 2rem;">
-        <h2><i class="fas fa-lock"></i> Password</h2>
-        <div class="form-group">
-            <label>Current Password</label>
-            <input type="password" id="currentPassword" class="modern-input" placeholder="Enter current password" />
-            <small>Leave empty if setting password for the first time</small>
-        </div>
-        <div class="form-group">
-            <label>New Password</label>
-            <input type="password" id="newPassword" class="modern-input" placeholder="Enter new password" />
-            <small>Password must be at least 6 characters</small>
-        </div>
-        <div class="form-group">
-            <label>Confirm New Password</label>
-            <input type="password" id="confirmPassword" class="modern-input" placeholder="Confirm new password" />
-        </div>
-        <button class="btn btn-primary" onclick="updatePassword()">
-            <i class="fas fa-save"></i> Update Password
-        </button>
+    <div class="form-group">
+        <label>Confirm New Password</label>
+        <input type="password" id="confirmPassword" class="modern-input" placeholder="Confirm new password" />
     </div>
+    <button class="btn btn-primary" onclick="updatePassword()">
+        <i class="fas fa-save"></i> Update Password
+    </button>
+</div>
 </div>
 {% endblock %}
 

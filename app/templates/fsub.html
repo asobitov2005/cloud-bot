@@ -8,59 +8,69 @@
     <h1><i class="fas fa-bullhorn"></i> Force Join Channels</h1>
 </div>
 
-<div class="page-header">
-    <button class="btn btn-primary" onclick="showAddChannelModal()">
-        <i class="fas fa-plus"></i> Add Channel
-    </button>
-</div>
+<div class="card" style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.125rem; font-weight: 600; color: var(--text-main);">Active Channels</h3>
+        <button class="btn btn-primary" onclick="showAddChannelModal()">
+            <i class="fas fa-plus"></i> Add Channel
+        </button>
+    </div>
 
-<div class="modern-table-container">
-    <table class="modern-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Title</th>
-                <th>Username</th>
-                <th>Invite Link</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="fsubTableBody">
-            <tr>
-                <td colspan="5" class="text-center" style="padding: 3rem;">
-                    <i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
-                    Loading...
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="modern-table-container" style="box-shadow: none; border: 1px solid var(--border-color);">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Invite Link</th>
+                    <th>Members</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="channelsTableBody">
+                <tr>
+                    <td colspan="6" class="text-center" style="padding: 3rem;">
+                        <i class="fas fa-spinner fa-spin"
+                            style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+                        Loading channels...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Add Channel Modal -->
-<div id="addChannelModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeAddChannelModal()">&times;</span>
-        <h2>Add Force Join Channel</h2>
+<div id="addChannelModal" class="modal"
+    style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px);">
+    <div class="modal-content"
+        style="background-color: var(--bg-card); margin: 10% auto; padding: 2rem; border: 1px solid var(--border-color); width: 90%; max-width: 500px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); position: relative;">
+        <span class="close" onclick="closeAddChannelModal()"
+            style="color: var(--text-muted); float: right; font-size: 1.5rem; font-weight: bold; cursor: pointer;">&times;</span>
+        <h2 style="margin-bottom: 1.5rem; color: var(--text-main);">Add New Channel</h2>
         <form id="addChannelForm" onsubmit="addChannel(event)">
-            <div class="form-group">
-                <label>Channel ID (Optional)</label>
-                <input type="text" id="channelId" class="modern-input" placeholder="e.g., -1001234567890" />
-                <small>Will be auto-detected from username or invite link if not provided</small>
+            <div style="margin-bottom: 1.5rem;">
+                <label for="channelId"
+                    style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">Channel ID
+                    / Username</label>
+                <input type="text" id="channelId" required placeholder="@channel or -100..."
+                    style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
+                <small style="display: block; margin-top: 0.5rem; color: var(--text-muted);">Bot must be admin in the
+                    channel</small>
             </div>
-            <div class="form-group">
-                <label>Channel Title</label>
-                <input type="text" id="channelTitle" class="modern-input" placeholder="Channel Name" />
+            <div style="margin-bottom: 1.5rem;">
+                <label for="inviteLink"
+                    style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">Invite
+                    Link</label>
+                <input type="text" id="inviteLink" required placeholder="https://t.me/..."
+                    style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
             </div>
-            <div class="form-group">
-                <label>Channel Username</label>
-                <input type="text" id="channelUsername" class="modern-input" placeholder="@channelname" />
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" onclick="closeAddChannelModal()" class="btn"
+                    style="background-color: var(--bg-input); color: var(--text-main);">Cancel</button>
+                <button type="submit" class="btn btn-primary">Add Channel</button>
             </div>
-            <div class="form-group">
-                <label>Invite Link (Optional)</label>
-                <input type="text" id="inviteLink" class="modern-input" placeholder="https://t.me/joinchat/..." />
-                <small>Use invite link to track how many users joined through this link</small>
-            </div>
-            <button type="submit" class="btn btn-primary">Add Channel</button>
         </form>
     </div>
 </div>

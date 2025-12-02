@@ -9,11 +9,14 @@
     <h1><i class="fas fa-folder-open"></i> Files Management</h1>
 </div>
 
-<div class="page-header">
-    <div class="search-container">
-        <i class="fas fa-search search-icon"></i>
-        <input type="text" id="searchInput" class="search-input" placeholder="Search files..."
-            oninput="searchFiles()" />
+<div class="card" style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <h3 style="font-size: 1.125rem; font-weight: 600; color: var(--text-main);">All Files</h3>
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search files..."
+                oninput="searchFiles()" />
+        </div>
     </div>
 </div>
 
@@ -44,7 +47,7 @@
     <button class="pagination-btn" id="prevBtn" onclick="changePage(-1)">
         <i class="fas fa-chevron-left"></i> Previous
     </button>
-    <span id="pageInfo" class="page-info"></span>
+    <span id="pageInfo" class="page-info" style="color: var(--text-muted); font-weight: 500;"></span>
     <button class="pagination-btn" id="nextBtn" onclick="changePage(1)">
         Next <i class="fas fa-chevron-right"></i>
     </button>
@@ -64,9 +67,15 @@
     async function loadFiles(page = 1) {
         currentPage = page;
         const skip = (page - 1) * filesPerPage;
+        const searchQuery = document.getElementById('searchInput').value.trim();
+
+        let url = `/admin/api/files?skip=${skip}&limit=${filesPerPage}`;
+        if (searchQuery) {
+            url += `&search=${encodeURIComponent(searchQuery)}`;
+        }
 
         try {
-            const res = await fetch(`/admin/api/files?skip=${skip}&limit=${filesPerPage}`, {
+            const res = await fetch(url, {
                 credentials: 'same-origin'
             });
             if (!res.ok) await handleApiError(res);
@@ -188,7 +197,7 @@
     function searchFiles() {
         clearTimeout(searchTimeout);
 
-        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        const query = document.getElementById('searchInput').value.trim();
 
         // Show searching message if there's a query
         if (query !== '') {
@@ -223,19 +232,8 @@
         }
 
         searchTimeout = setTimeout(() => {
-            const filtered = currentFiles.filter(f =>
-                f.title.toLowerCase().includes(query)
-            );
-
-            // Remove searching message
-            if (searchingMessage) {
-                searchingMessage.remove();
-                searchingMessage = null;
-            }
-
-            // Render results (without pagination for search)
-            renderFiles(filtered);
-        }, 300); // 300ms debounce
+            loadFiles(1);
+        }, 500); // 500ms debounce
     }
 
     async function deleteFile(fileId) {

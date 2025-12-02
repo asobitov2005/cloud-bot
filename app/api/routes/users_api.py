@@ -28,14 +28,20 @@ async def users_page(request: Request, auth_result = Depends(verify_web_token)):
 async def get_users(
     skip: int = 0,
     limit: int = 50,
+    search: str = None,
     db: AsyncSession = Depends(get_db),
     token: dict = Depends(verify_token)
 ):
-    """Get users list"""
+    """Get users list with optional search"""
     from app.models.permissions import parse_permissions
+    from app.models.crud import search_users
     
-    users = await get_all_users(db, skip=skip, limit=limit, primary_admin_id=settings.ADMIN_ID)
-    total = await get_users_count(db)
+    if search:
+        users = await search_users(db, query=search, skip=skip, limit=limit)
+        total = await get_users_count(db, query=search)
+    else:
+        users = await get_all_users(db, skip=skip, limit=limit, primary_admin_id=settings.ADMIN_ID)
+        total = await get_users_count(db)
     
     return {
         "users": [
@@ -55,7 +61,8 @@ async def get_users(
         ],
         "total": total,
         "skip": skip,
-        "limit": limit
+        "limit": limit,
+        "search": search
     }
 
 

@@ -11,7 +11,7 @@
 <!-- Stats Grid -->
 <div class="stats-grid">
     <div class="stat-card">
-        <div class="stat-icon">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);">
             <i class="fas fa-users"></i>
         </div>
         <div class="stat-info">
@@ -21,7 +21,7 @@
     </div>
 
     <div class="stat-card">
-        <div class="stat-icon">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
             <i class="fas fa-file-alt"></i>
         </div>
         <div class="stat-info">
@@ -31,7 +31,7 @@
     </div>
 
     <div class="stat-card">
-        <div class="stat-icon">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
             <i class="fas fa-download"></i>
         </div>
         <div class="stat-info">
@@ -41,94 +41,88 @@
     </div>
 
     <div class="stat-card">
-        <div class="stat-icon">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
             <i class="fas fa-hdd"></i>
         </div>
         <div class="stat-info">
             <h3 id="total-files-volume">-</h3>
-            <p>Total Files Volume</p>
+            <p>Total Volume</p>
         </div>
     </div>
 </div>
 
-<!-- Users Joined/Left Stats - Clean Design -->
-<div class="user-stats-container" style="margin-top: 20px; margin-bottom: 2rem;">
-    <div class="user-stats-section">
-        <div class="user-stats-header">
-            <div class="user-stats-icon-simple joined-icon-simple">
-                <i class="fas fa-user"></i>
-                <span class="user-stats-icon-badge joined-badge">+</span>
+<!-- Users Joined/Left Stats -->
+<div class="charts-grid" style="margin-bottom: 2rem;">
+    <div class="card" style="grid-column: span 2;">
+        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 600; color: var(--text-main);">
+            <i class="fas fa-user-clock" style="margin-right: 0.5rem; color: var(--primary-color);"></i> User Activity
+        </h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <!-- Joined -->
+            <div>
+                <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                    <span class="badge badge-active" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                        <i class="fas fa-user-plus"></i> Joined
+                    </span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; padding: 0.5rem; background: var(--bg-input); border-radius: var(--radius-md);">
+                    <span style="color: var(--text-muted);">Today</span>
+                    <span style="font-weight: 600; color: var(--success-color);">+<span
+                            id="users-joined-today">0</span></span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; padding: 0.5rem; background: var(--bg-input); border-radius: var(--radius-md);">
+                    <span style="color: var(--text-muted);">This Week</span>
+                    <span style="font-weight: 600; color: var(--success-color);">+<span
+                            id="users-joined-week">0</span></span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-input); border-radius: var(--radius-md);">
+                    <span style="color: var(--text-muted);">This Month</span>
+                    <span style="font-weight: 600; color: var(--success-color);">+<span
+                            id="users-joined-month">0</span></span>
+                </div>
             </div>
-            <h3 class="user-stats-title-simple">Joined Users</h3>
-        </div>
-        <div class="user-stats-items">
-            <div class="user-stats-row">
-                <span class="user-stats-label-simple">Today:</span>
-                <span class="user-stats-number joined-number">
-                    <span class="user-stats-sign-simple">+</span>
-                    <span id="users-joined-today">0</span>
-                </span>
-            </div>
-            <div class="user-stats-row">
-                <span class="user-stats-label-simple">This Week:</span>
-                <span class="user-stats-number joined-number">
-                    <span class="user-stats-sign-simple">+</span>
-                    <span id="users-joined-week">0</span>
-                </span>
-            </div>
-            <div class="user-stats-row">
-                <span class="user-stats-label-simple">This Month:</span>
-                <span class="user-stats-number joined-number">
-                    <span class="user-stats-sign-simple">+</span>
-                    <span id="users-joined-month">0</span>
-                </span>
+
+            <!-- Left -->
+            <div>
+                <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                    <span class="badge badge-blocked" style="font-size: 0.875rem; padding: 0.5rem 1rem;">
+                        <i class="fas fa-user-minus"></i> Left / Blocked
+                    </span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; padding: 0.5rem; background: var(--bg-input); border-radius: var(--radius-md);">
+                    <span style="color: var(--text-muted);">Today</span>
+                    <span style="font-weight: 600; color: var(--danger-color);">-<span
+                            id="users-left-today">0</span></span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; padding: 0.5rem; background: var(--bg-input); border-radius: var(--radius-md);">
+                    <span style="color: var(--text-muted);">This Week</span>
+                    <span style="font-weight: 600; color: var(--danger-color);">-<span
+                            id="users-left-week">0</span></span>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-input); border-radius: var(--radius-md);">
+                    <span style="color: var(--text-muted);">This Month</span>
+                    <span style="font-weight: 600; color: var(--danger-color);">-<span
+                            id="users-left-month">0</span></span>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="user-stats-section">
-        <div class="user-stats-header">
-            <div class="user-stats-icon-simple left-icon-simple">
-                <i class="fas fa-user"></i>
-                <span class="user-stats-icon-badge left-badge">-</span>
-            </div>
-            <h3 class="user-stats-title-simple">Left Users</h3>
-        </div>
-        <div class="user-stats-items">
-            <div class="user-stats-row">
-                <span class="user-stats-label-simple">Today:</span>
-                <span class="user-stats-number left-number">
-                    <span class="user-stats-sign-simple">-</span>
-                    <span id="users-left-today">0</span>
-                </span>
-            </div>
-            <div class="user-stats-row">
-                <span class="user-stats-label-simple">This Week:</span>
-                <span class="user-stats-number left-number">
-                    <span class="user-stats-sign-simple">-</span>
-                    <span id="users-left-week">0</span>
-                </span>
-            </div>
-            <div class="user-stats-row">
-                <span class="user-stats-label-simple">This Month:</span>
-                <span class="user-stats-number left-number">
-                    <span class="user-stats-sign-simple">-</span>
-                    <span id="users-left-month">0</span>
-                </span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Health Check Stats -->
-<div class="stats-grid" style="margin-top: 20px;">
-    <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
-        <div class="stat-icon">
-            <i class="fas fa-exclamation-triangle text-white"></i>
+    <!-- Health Check -->
+    <div class="stat-card"
+        style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none;">
+        <div class="stat-icon" style="background: rgba(255,255,255,0.2); color: white; box-shadow: none;">
+            <i class="fas fa-heartbeat"></i>
         </div>
         <div class="stat-info">
-            <h3 id="total-errors">-</h3>
-            <p>Total Errors (30 days)</p>
+            <h3 id="total-errors" style="color: white;">-</h3>
+            <p style="color: rgba(255,255,255,0.8);">System Errors (30d)</p>
         </div>
     </div>
 </div>
@@ -136,50 +130,49 @@
 <!-- Charts Grid -->
 <div class="charts-grid">
     <div class="chart-card">
-        <h3><i class="fas fa-chart-area"></i> Downloads Over Time</h3>
+        <h3><i class="fas fa-chart-area" style="color: var(--primary-color);"></i> Downloads Trend</h3>
         <canvas id="downloadsChart"></canvas>
     </div>
 
     <div class="chart-card">
-        <h3><i class="fas fa-user-plus"></i> User Statistics</h3>
+        <h3><i class="fas fa-user-plus" style="color: var(--success-color);"></i> User Growth</h3>
         <canvas id="userStatisticsChart"></canvas>
     </div>
 
     <div class="chart-card">
-        <h3><i class="fas fa-globe"></i> Users by Country</h3>
+        <h3><i class="fas fa-globe" style="color: var(--info-color);"></i> Users by Country</h3>
         <canvas id="userCountryChart"></canvas>
     </div>
 
-
     <div class="chart-card">
-        <h3><i class="fas fa-trophy"></i> Top Files</h3>
+        <h3><i class="fas fa-trophy" style="color: var(--warning-color);"></i> Top Files</h3>
         <canvas id="topFilesChart"></canvas>
     </div>
 </div>
 
 <!-- Download Period Charts -->
-<div class="charts-grid" style="margin-top: 20px;">
+<div class="charts-grid">
     <div class="chart-card">
-        <h3><i class="fas fa-calendar-day"></i> Daily Downloads (30 days)</h3>
+        <h3><i class="fas fa-calendar-day" style="color: var(--info-color);"></i> Daily Downloads</h3>
         <canvas id="dailyDownloadsChart"></canvas>
     </div>
 
     <div class="chart-card">
-        <h3><i class="fas fa-calendar-week"></i> Weekly Downloads (12 weeks)</h3>
+        <h3><i class="fas fa-calendar-week" style="color: var(--success-color);"></i> Weekly Downloads</h3>
         <canvas id="weeklyDownloadsChart"></canvas>
     </div>
 
     <div class="chart-card">
-        <h3><i class="fas fa-calendar-alt"></i> Monthly Downloads (12 months)</h3>
+        <h3><i class="fas fa-calendar-alt" style="color: var(--primary-color);"></i> Monthly Downloads</h3>
         <canvas id="monthlyDownloadsChart"></canvas>
     </div>
 </div>
 
 <!-- Health Check Chart -->
-<div class="charts-grid" style="margin-top: 20px;">
-    <div class="chart-card">
-        <h3><i class="fas fa-heartbeat"></i> Health Check - Errors Over Time</h3>
-        <canvas id="healthCheckChart"></canvas>
+<div class="charts-grid">
+    <div class="chart-card" style="grid-column: 1 / -1;">
+        <h3><i class="fas fa-heartbeat" style="color: var(--danger-color);"></i> System Health</h3>
+        <canvas id="healthCheckChart" style="max-height: 300px;"></canvas>
     </div>
 </div>
 {% endblock %}

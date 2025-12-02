@@ -1,54 +1,162 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PrimeLingo Admin</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <title>{% block page_title %}PrimeLingo Admin{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
     <div class="container">
         <!-- Modern Sidebar -->
-        <nav class="sidebar">
+        <nav class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2><i class="fas fa-robot"></i> PrimeLingo</h2>
                 <p>Admin Panel</p>
             </div>
             <div class="sidebar-nav">
-                <a href="/admin/dashboard"
-                    class="nav-item {% if request.url.path == '/admin/dashboard' %}active{% endif %}">
+                <a href="/admin/dashboard" class="nav-item {% block dashboard_active %}{% endblock %}">
                     <span><i class="fas fa-chart-line"></i></span> Dashboard
                 </a>
-                <a href="/admin/files" class="nav-item {% if request.url.path == '/admin/files' %}active{% endif %}">
+                <a href="/admin/files" class="nav-item {% block files_active %}{% endblock %}">
                     <span><i class="fas fa-folder-open"></i></span> Files
                 </a>
-                <a href="/admin/users" class="nav-item {% if request.url.path == '/admin/users' %}active{% endif %}">
+                <a href="/admin/users" class="nav-item {% block users_active %}{% endblock %}">
                     <span><i class="fas fa-users"></i></span> Users
                 </a>
-                <a href="/admin/fsub" class="nav-item {% if request.url.path == '/admin/fsub' %}active{% endif %}">
+                <a href="/admin/fsub" class="nav-item {% block fsub_active %}{% endblock %}">
                     <span><i class="fas fa-bullhorn"></i></span> Force Join
                 </a>
-                <a href="/admin/settings"
-                    class="nav-item {% if request.url.path == '/admin/settings' %}active{% endif %}">
+                <a href="/admin/settings" class="nav-item {% block settings_active %}{% endblock %}">
                     <span><i class="fas fa-cog"></i></span> Settings
                 </a>
-                <a href="/admin/logout" class="nav-item">
-                    <span><i class="fas fa-sign-out-alt"></i></span> Logout
-                </a>
+
+                <div style="margin-top: auto;">
+                    <a href="/admin/logout" class="nav-item" style="color: var(--danger-color);">
+                        <span><i class="fas fa-sign-out-alt"></i></span> Logout
+                    </a>
+                </div>
             </div>
         </nav>
 
         <!-- Main content -->
         <main class="main-content">
+            <!-- Top Bar for Mobile & Theme Toggle -->
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem; gap: 1rem;">
+                <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+
             {% block content %}{% endblock %}
         </main>
     </div>
 
-    <script src="/static/js/admin.js"></script>
+    <!-- Global Scripts -->
+    <script>
+        // Theme Management
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+        const icon = themeToggle.querySelector('i');
+
+        // Check local storage
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        htmlElement.setAttribute('data-theme', savedTheme);
+        updateIcon(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+            htmlElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateIcon(newTheme);
+        });
+
+        function updateIcon(theme) {
+            if (theme === 'dark') {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+
+        // Mobile Menu Toggle (Optional implementation if needed later)
+        // For now relying on CSS media queries for simple responsiveness
+
+        // Helper for formatting numbers
+        function formatNumber(num) {
+            return new Intl.NumberFormat().format(num);
+        }
+
+        // Helper for API errors
+        async function handleApiError(response) {
+            if (response.status === 401) {
+                window.location.href = '/admin/login';
+                return;
+            }
+            const data = await response.json().catch(() => ({}));
+            const message = data.detail || 'An error occurred';
+            showNotification(message, 'error');
+            throw new Error(message);
+        }
+
+        // Notification System
+        function showNotification(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `notification ${type}`;
+            div.style.position = 'fixed';
+            div.style.top = '20px';
+            div.style.right = '20px';
+            div.style.padding = '1rem 1.5rem';
+            div.style.borderRadius = 'var(--radius-md)';
+            div.style.backgroundColor = type === 'error' ? 'var(--danger-color)' : 'var(--success-color)';
+            div.style.color = 'white';
+            div.style.boxShadow = 'var(--shadow-lg)';
+            div.style.zIndex = '1000';
+            div.style.animation = 'slideIn 0.3s ease';
+            div.textContent = message;
+
+            document.body.appendChild(div);
+
+            setTimeout(() => {
+                div.style.animation = 'slideOut 0.3s ease forwards';
+                setTimeout(() => div.remove(), 300);
+            }, 3000);
+        }
+
+        // Add keyframes for notification
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+
     {% block scripts %}{% endblock %}
 </body>
 

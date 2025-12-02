@@ -87,7 +87,7 @@
             });
             if (!response.ok) await handleApiError(response);
             const data = await response.json();
-            currentChannels = data.channels;
+            currentChannels = data.channels || [];
             renderChannels(currentChannels);
         } catch (error) {
             console.error('Error loading channels:', error);
@@ -98,10 +98,10 @@
     function renderChannels(channels) {
         const tbody = document.getElementById('fsubTableBody');
 
-        if (channels.length === 0) {
+        if (!channels || channels.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="text-center" style="padding: 3rem; color: var(--text-muted);">
+                    <td colspan="6" class="text-center" style="padding: 3rem; color: var(--text-muted);">
                         <i class="fas fa-bullhorn" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
                         No force join channels configured
                     </td>
@@ -114,7 +114,8 @@
                 <td>${channel.channel_id}</td>
                 <td>${channel.channel_title || 'N/A'}</td>
                 <td>${channel.channel_username ? '@' + channel.channel_username : 'N/A'}</td>
-                <td>${channel.invite_link ? `<a href="${channel.invite_link}" target="_blank">${channel.invite_link.substring(0, 40)}...</a>` : 'N/A'}</td>
+                <td>${channel.invite_link ? `<a href="${channel.invite_link}" target="_blank">Link</a>` : 'N/A'}</td>
+                <td><span class="badge badge-success">Active</span></td>
                 <td>
                     <button class="action-btn" onclick="removeChannel(${channel.channel_id})" title="Remove Channel" style="color: #ef4444;">
                         <i class="fas fa-trash"></i>
@@ -131,22 +132,23 @@
     function closeAddChannelModal() {
         document.getElementById('addChannelModal').style.display = 'none';
         // Clear all form fields
-        document.getElementById('channelId').value = '';
-        document.getElementById('channelTitle').value = '';
-        document.getElementById('channelUsername').value = '';
-        document.getElementById('inviteLink').value = '';
+        const channelIdInput = document.getElementById('channelId');
+        const inviteLinkInput = document.getElementById('inviteLink');
+        if (channelIdInput) channelIdInput.value = '';
+        if (inviteLinkInput) inviteLinkInput.value = '';
     }
 
     async function addChannel(event) {
         event.preventDefault();
 
-        const channelId = document.getElementById('channelId').value.trim();
-        const channelTitle = document.getElementById('channelTitle').value.trim();
-        const channelUsername = document.getElementById('channelUsername').value.trim().replace('@', '');
-        const inviteLink = document.getElementById('inviteLink').value.trim();
+        const channelIdInput = document.getElementById('channelId');
+        const inviteLinkInput = document.getElementById('inviteLink');
 
-        if (!channelId && !channelUsername && !inviteLink) {
-            showNotification('Please provide at least one: Channel ID, Username, or Invite Link', 'error');
+        const channelId = channelIdInput ? channelIdInput.value.trim() : '';
+        const inviteLink = inviteLinkInput ? inviteLinkInput.value.trim() : '';
+
+        if (!channelId && !inviteLink) {
+            showNotification('Please provide Channel ID/Username or Invite Link', 'error');
             return;
         }
 
@@ -159,8 +161,7 @@
                 credentials: 'same-origin',
                 body: JSON.stringify({
                     channel_id: channelId || null,
-                    channel_title: channelTitle || null,
-                    channel_username: channelUsername || null,
+                    channel_username: channelId.startsWith('@') ? channelId : null,
                     invite_link: inviteLink || null
                 })
             });

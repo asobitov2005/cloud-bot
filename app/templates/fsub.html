@@ -22,13 +22,13 @@
                 <tr>
                     <th>ID</th>
                     <th>Title</th>
+                    <th>Username</th>
                     <th>Invite Link</th>
-                    <th>Members</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody id="channelsTableBody">
+            <tbody id="fsubTableBody">
                 <tr>
                     <td colspan="6" class="text-center" style="padding: 3rem;">
                         <i class="fas fa-spinner fa-spin"
@@ -54,7 +54,7 @@
                 <label for="channelId"
                     style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">Channel ID
                     / Username</label>
-                <input type="text" id="channelId" required placeholder="@channel or -100..."
+                <input type="text" id="channelId" placeholder="@channel or -100..."
                     style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
                 <small style="display: block; margin-top: 0.5rem; color: var(--text-muted);">Bot must be admin in the
                     channel</small>
@@ -63,7 +63,7 @@
                 <label for="inviteLink"
                     style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">Invite
                     Link</label>
-                <input type="text" id="inviteLink" required placeholder="https://t.me/..."
+                <input type="text" id="inviteLink" placeholder="https://t.me/..."
                     style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 1rem;">
@@ -83,6 +83,9 @@
     async function loadFsubChannels() {
         try {
             const response = await fetch('/admin/api/fsub', {
+                headers: {
+                    'Accept': 'application/json'
+                },
                 credentials: 'same-origin'
             });
             if (!response.ok) await handleApiError(response);

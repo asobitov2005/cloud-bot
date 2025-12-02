@@ -140,7 +140,7 @@
             <span id="error-text"></span>
         </div>
 
-        <form id="loginForm" onsubmit="handleLogin(event)">
+        <form id="loginForm" method="POST" action="/admin/login">
             <div class="form-group">
                 <label for="username">Username</label>
                 <div class="input-group">
@@ -168,9 +168,12 @@
         // Show error message if redirected with error parameter
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('error')) {
-            const error = document.getElementById('errorAlert');
-            error.textContent = 'Invalid username or password';
-            error.style.display = 'block';
+            const errorDiv = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            if (errorDiv && errorText) {
+                errorText.textContent = 'Invalid username or password';
+                errorDiv.style.display = 'flex';
+            }
         }
     </script>
 

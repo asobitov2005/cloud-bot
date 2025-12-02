@@ -1,38 +1,111 @@
 {% extends "base.html" %}
 
 {% block settings_active %}active{% endblock %}
-{% block page_title %}Admin Settings{% endblock %}
+{% block page_title %}Settings{% endblock %}
 
 {% block content %}
 <div class="content-header">
-    <small>This will be shown to users in bot messages</small>
-</div>
-<button class="btn btn-primary" onclick="updateDisplayUsername()">
-    <i class="fas fa-save"></i> Update Display Username
-</button>
+    <h1><i class="fas fa-cog"></i> Settings</h1>
 </div>
 
-<!-- Password Section -->
-<div class="modern-card" style="margin-bottom: 2rem;">
-    <h2><i class="fas fa-lock"></i> Password</h2>
-    <div class="form-group">
-        <label>Current Password</label>
-        <input type="password" id="currentPassword" class="modern-input" placeholder="Enter current password" />
-        <small>Leave empty if setting password for the first time</small>
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <h3 style="font-size: 1.125rem; font-weight: 600; color: var(--text-main);">Admin Profile</h3>
     </div>
-    <div class="form-group">
-        <label>New Password</label>
-        <input type="password" id="newPassword" class="modern-input" placeholder="Enter new password" />
-        <small>Password must be at least 6 characters</small>
+    <div class="card-body">
+        <!-- Username Section -->
+        <div style="margin-bottom: 2rem;">
+            <h4 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 1rem;">
+                <i class="fas fa-user" style="color: var(--primary-color); margin-right: 0.5rem;"></i> Username
+            </h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: end;">
+                <div class="form-group">
+                    <label
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">Current
+                        Username</label>
+                    <input type="text" id="currentUsername" readonly
+                        style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-body); color: var(--text-muted);">
+                </div>
+                <div class="form-group">
+                    <label for="newUsername"
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">New
+                        Username</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="newUsername" placeholder="Enter new username"
+                            style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
+                        <button class="btn btn-primary" onclick="updateUsername()">Update</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
+
+        <!-- Display Username Section -->
+        <div style="margin-bottom: 2rem;">
+            <h4 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 1rem;">
+                <i class="fas fa-at" style="color: var(--info-color); margin-right: 0.5rem;"></i> Display Username
+            </h4>
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+                This username will be shown in bot messages (help section, blocked user messages, etc.) instead of your
+                Telegram username.
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: end;">
+                <div class="form-group">
+                    <label
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">Current
+                        Display Name</label>
+                    <input type="text" id="currentDisplayUsername" readonly
+                        style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-body); color: var(--text-muted);">
+                </div>
+                <div class="form-group">
+                    <label for="newDisplayUsername"
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">New
+                        Display Name</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="newDisplayUsername" placeholder="e.g. @SupportBot"
+                            style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
+                        <button class="btn btn-primary" onclick="updateDisplayUsername()">Update</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 2rem 0;">
+
+        <!-- Password Section -->
+        <div>
+            <h4 style="font-size: 1rem; font-weight: 600; color: var(--text-main); margin-bottom: 1rem;">
+                <i class="fas fa-lock" style="color: var(--warning-color); margin-right: 0.5rem;"></i> Change Password
+            </h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; align-items: end;">
+                <div class="form-group">
+                    <label for="currentPassword"
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">Current
+                        Password</label>
+                    <input type="password" id="currentPassword" placeholder="Current password"
+                        style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
+                </div>
+                <div class="form-group">
+                    <label for="newPassword"
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">New
+                        Password</label>
+                    <input type="password" id="newPassword" placeholder="New password"
+                        style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword"
+                        style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">Confirm
+                        Password</label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="password" id="confirmPassword" placeholder="Confirm new password"
+                            style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
+                        <button class="btn btn-primary" onclick="updatePassword()">Update</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="form-group">
-        <label>Confirm New Password</label>
-        <input type="password" id="confirmPassword" class="modern-input" placeholder="Confirm new password" />
-    </div>
-    <button class="btn btn-primary" onclick="updatePassword()">
-        <i class="fas fa-save"></i> Update Password
-    </button>
-</div>
 </div>
 {% endblock %}
 

@@ -5,14 +5,15 @@
 
 {% block content %}
 <div class="page-header">
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search users..." oninput="searchUsers()" />
-        <!-- <i class="fas fa-search" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i> -->
+    <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search users..."
+            oninput="searchUsers()" />
     </div>
 </div>
 
-<div class="table-container">
-    <table class="data-table">
+<div class="modern-table-container">
+    <table class="modern-table">
         <thead>
             <tr>
                 <th>ID</th>
@@ -27,10 +28,23 @@
         </thead>
         <tbody id="usersTableBody">
             <tr>
-                <td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i> Loading...</td>
+                <td colspan="8" class="text-center" style="padding: 3rem;">
+                    <i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+                    Loading users...
+                </td>
             </tr>
         </tbody>
     </table>
+</div>
+
+<div id="paginationControls" class="pagination-container" style="display: none;">
+    <button class="pagination-btn" id="prevBtn" onclick="changePage(-1)">
+        <i class="fas fa-chevron-left"></i> Previous
+    </button>
+    <span id="pageInfo" class="page-info"></span>
+    <button class="pagination-btn" id="nextBtn" onclick="changePage(1)">
+        Next <i class="fas fa-chevron-right"></i>
+    </button>
 </div>
 
 <!-- Make Admin Modal -->
@@ -45,8 +59,10 @@
                 <!-- Permissions checkboxes will be added here -->
             </div>
             <div style="margin-top: 15px;">
-                <button type="button" onclick="selectAllPermissions()" class="btn btn-sm btn-secondary">Select All</button>
-                <button type="button" onclick="deselectAllPermissions()" class="btn btn-sm btn-secondary">Deselect All</button>
+                <button type="button" onclick="selectAllPermissions()" class="btn btn-sm btn-secondary">Select
+                    All</button>
+                <button type="button" onclick="deselectAllPermissions()" class="btn btn-sm btn-secondary">Deselect
+                    All</button>
             </div>
             <div style="margin-top: 20px;">
                 <button type="submit" class="btn btn-primary">Make Admin</button>
@@ -67,8 +83,10 @@
                 <!-- Permissions checkboxes will be added here -->
             </div>
             <div style="margin-top: 15px;">
-                <button type="button" onclick="selectAllEditPermissions()" class="btn btn-sm btn-secondary">Select All</button>
-                <button type="button" onclick="deselectAllEditPermissions()" class="btn btn-sm btn-secondary">Deselect All</button>
+                <button type="button" onclick="selectAllEditPermissions()" class="btn btn-sm btn-secondary">Select
+                    All</button>
+                <button type="button" onclick="deselectAllEditPermissions()" class="btn btn-sm btn-secondary">Deselect
+                    All</button>
             </div>
             <div style="margin-top: 20px;">
                 <button type="submit" class="btn btn-primary">Update Permissions</button>
@@ -82,16 +100,25 @@
 {% block scripts %}
 <script>
     let currentUsers = [];
+    let searchTimeout;
+    let currentPage = 1;
+    let totalUsers = 0;
+    let usersPerPage = 50;
 
-    async function loadUsers() {
+    async function loadUsers(page = 1) {
+        currentPage = page;
+        const skip = (page - 1) * usersPerPage;
+
         try {
-            const res = await fetch('/admin/api/users', {
+            const res = await fetch(`/admin/api/users?skip=${skip}&limit=${usersPerPage}`, {
                 credentials: 'same-origin'
             });
             if (!res.ok) await handleApiError(res);
             const data = await res.json();
             currentUsers = data.users;
+            totalUsers = data.total || 0;
             renderUsers(currentUsers);
+            renderPagination();
         } catch (error) {
             console.error('Error loading users:', error);
         }
@@ -101,7 +128,13 @@
         const tbody = document.getElementById('usersTableBody');
 
         if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center">No users found</td></tr>';
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center" style="padding: 3rem; color: var(--text-muted);">
+                        <i class="fas fa-users" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                        No users found
+                    </td>
+                </tr>`;
             return;
         }
 
@@ -119,32 +152,32 @@
                 user.is_admin ?
                     `<div>
                         <span class="badge" style="background: #667eea; color: white; cursor: pointer; transition: opacity 0.2s;" onclick="editPermissions(${user.id})" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"><i class="fas fa-shield-alt"></i> Admin <i class="fas fa-edit" style="font-size: 0.8em; margin-left: 5px;"></i></span>
-                        ${user.permissions && user.permissions.length > 0 ? 
-                            '<div style="margin-top: 5px;"><small style="font-size: 0.75em; color: #666; display: block; word-break: break-word;">' + user.permissions.join(', ') + '</small></div>' : 
-                            '<div style="margin-top: 5px;"><small style="font-size: 0.75em; color: #999;">No permissions</small></div>'
-                        }
+                        ${user.permissions && user.permissions.length > 0 ?
+                        '<div style="margin-top: 5px;"><small style="font-size: 0.75em; color: #666; display: block; word-break: break-word;">' + user.permissions.join(', ') + '</small></div>' :
+                        '<div style="margin-top: 5px;"><small style="font-size: 0.75em; color: #999;">No permissions</small></div>'
+                    }
                     </div>` :
                     '<span class="badge badge-secondary"><i class="fas fa-user"></i> User</span>'
             }
                 </td>
                 <td>
                     ${user.is_blocked ?
-                '<span class="badge badge-danger"><i class="fas fa-lock"></i> Blocked</span>' :
-                '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Active</span>'
+                '<span class="badge badge-blocked"><i class="fas fa-lock" style="margin-right: 4px;"></i> Blocked</span>' :
+                '<span class="badge badge-active"><i class="fas fa-check-circle" style="margin-right: 4px;"></i> Active</span>'
             }
                 </td>
                 <td style="white-space: nowrap; min-width: 250px;">
                     <div style="display: flex; flex-wrap: wrap; gap: 5px;">
                         ${user.is_blocked ?
-                    `<button class="btn btn-sm btn-success" onclick="unblockUser(${user.id})"><i class="fas fa-unlock"></i> Unblock</button>` :
-                    `<button class="btn btn-sm btn-danger" onclick="blockUser(${user.id})"><i class="fas fa-ban"></i> Block</button>`
-                }
+                `<button class="action-btn" onclick="unblockUser(${user.id})" title="Unblock User" style="color: #10b981;"><i class="fas fa-unlock"></i></button>` :
+                `<button class="action-btn" onclick="blockUser(${user.id})" title="Block User" style="color: #ef4444;"><i class="fas fa-ban"></i></button>`
+            }
                         ${!user.is_primary_admin ?
-                    (user.is_admin ?
-                        `<button class="btn btn-sm btn-warning" onclick="removeAdmin(${user.id})"><i class="fas fa-user-minus"></i> Remove Admin</button>` :
-                        `<button class="btn btn-sm btn-primary" onclick="showMakeAdminModal(${user.id})"><i class="fas fa-user-shield"></i> Make Admin</button>`) :
-                    ''
-                }
+                (user.is_admin ?
+                    `<button class="action-btn" onclick="removeAdmin(${user.id})" title="Remove Admin" style="color: #f59e0b;"><i class="fas fa-user-minus"></i></button>` :
+                    `<button class="action-btn" onclick="showMakeAdminModal(${user.id})" title="Make Admin" style="color: #6366f1;"><i class="fas fa-user-shield"></i></button>`) :
+                ''
+            }
                     </div>
                 </td>
             </tr>
@@ -152,22 +185,62 @@
     }
 
     // Debounced search function
-    let searchTimeout;
     function searchUsers() {
         clearTimeout(searchTimeout);
+
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+
+        if (query === '') {
+            loadUsers(1);
+            return;
+        }
+
         searchTimeout = setTimeout(() => {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            if (query === '') {
-                renderUsers(currentUsers);
-                return;
-            }
             const filtered = currentUsers.filter(u =>
                 (u.username && u.username.toLowerCase().includes(query)) ||
                 (u.full_name && u.full_name.toLowerCase().includes(query)) ||
                 u.telegram_id.toString().includes(query)
             );
             renderUsers(filtered);
+            // Hide pagination during search
+            document.getElementById('paginationControls').style.display = 'none';
         }, 300); // 300ms debounce
+    }
+
+    function renderPagination() {
+        const paginationControls = document.getElementById('paginationControls');
+        const pageInfo = document.getElementById('pageInfo');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        const totalPages = Math.ceil(totalUsers / usersPerPage);
+
+        // Hide pagination if only one page or no users
+        if (totalPages <= 1) {
+            paginationControls.style.display = 'none';
+            return;
+        }
+
+        paginationControls.style.display = 'flex';
+        pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+
+        // Disable/enable buttons
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+    }
+
+    function changePage(delta) {
+        const newPage = currentPage + delta;
+        const totalPages = Math.ceil(totalUsers / usersPerPage);
+
+        if (newPage >= 1 && newPage <= totalPages) {
+            loadUsers(newPage);
+            // Scroll to top of table
+            const table = document.querySelector('.modern-table-container');
+            if (table) {
+                table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
     }
 
     async function blockUser(userId) {
@@ -277,7 +350,7 @@
         document.getElementById('editPermissionsUserId').value = userId;
         const permissionsList = document.getElementById('editPermissionsList');
         const userPermissions = user.permissions || [];
-        
+
         permissionsList.innerHTML = Object.entries(PERMISSIONS).map(([key, label]) => `
             <div style="margin: 10px 0;">
                 <label style="display: flex; align-items: center; cursor: pointer;">
@@ -328,7 +401,7 @@
     }
 
     // Close modals when clicking outside
-    window.onclick = function(event) {
+    window.onclick = function (event) {
         const makeAdminModal = document.getElementById('makeAdminModal');
         const editPermissionsModal = document.getElementById('editPermissionsModal');
         if (event.target == makeAdminModal) {

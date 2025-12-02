@@ -7,7 +7,7 @@ from app.core.database import get_db
 from app.core.config import settings
 from app.models.crud import (
     get_all_users, block_user, unblock_user, 
-    toggle_admin_status, get_user_by_id
+    toggle_admin_status, get_user_by_id, get_users_count
 )
 from app.api.auth import verify_token, verify_web_token
 
@@ -35,6 +35,7 @@ async def get_users(
     from app.models.permissions import parse_permissions
     
     users = await get_all_users(db, skip=skip, limit=limit, primary_admin_id=settings.ADMIN_ID)
+    total = await get_users_count(db)
     
     return {
         "users": [
@@ -51,7 +52,10 @@ async def get_users(
                 "joined_at": u.joined_at.isoformat()
             }
             for u in users
-        ]
+        ],
+        "total": total,
+        "skip": skip,
+        "limit": limit
     }
 
 

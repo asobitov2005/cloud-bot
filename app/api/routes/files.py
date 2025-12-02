@@ -4,7 +4,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.models.crud import (
-    get_all_files, get_file_by_id, search_files, delete_file, update_file
+    get_all_files, get_file_by_id, search_files, delete_file, update_file,
+    get_files_count
 )
 from app.api.auth import verify_token, verify_web_token
 
@@ -31,6 +32,9 @@ async def get_files(
     token: dict = Depends(verify_token)
 ):
     """Get files list with file sizes"""
+    # Get total count for pagination
+    total_count = await get_files_count(db, file_type=file_type)
+    
     if search:
         files = await search_files(db, search, file_type=file_type, skip=skip, limit=limit)
     else:
@@ -66,7 +70,12 @@ async def get_files(
             "created_at": f.created_at.isoformat()
         })
     
-    return {"files": files_data}
+    return {
+        "files": files_data,
+        "total": total_count,
+        "skip": skip,
+        "limit": limit
+    }
 
 
 @router.get("/api/files/{file_id}")

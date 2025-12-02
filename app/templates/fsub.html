@@ -11,8 +11,8 @@
     </button>
 </div>
 
-<div class="table-container">
-    <table class="data-table">
+<div class="modern-table-container">
+    <table class="modern-table">
         <thead>
             <tr>
                 <th>ID</th>
@@ -24,7 +24,10 @@
         </thead>
         <tbody id="fsubTableBody">
             <tr>
-                <td colspan="5" class="text-center">Loading...</td>
+                <td colspan="5" class="text-center" style="padding: 3rem;">
+                    <i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+                    Loading...
+                </td>
             </tr>
         </tbody>
     </table>
@@ -38,20 +41,20 @@
         <form id="addChannelForm" onsubmit="addChannel(event)">
             <div class="form-group">
                 <label>Channel ID (Optional)</label>
-                <input type="text" id="channelId" placeholder="e.g., -1001234567890" />
+                <input type="text" id="channelId" class="modern-input" placeholder="e.g., -1001234567890" />
                 <small>Will be auto-detected from username or invite link if not provided</small>
             </div>
             <div class="form-group">
                 <label>Channel Title</label>
-                <input type="text" id="channelTitle" placeholder="Channel Name" />
+                <input type="text" id="channelTitle" class="modern-input" placeholder="Channel Name" />
             </div>
             <div class="form-group">
                 <label>Channel Username</label>
-                <input type="text" id="channelUsername" placeholder="@channelname" />
+                <input type="text" id="channelUsername" class="modern-input" placeholder="@channelname" />
             </div>
             <div class="form-group">
                 <label>Invite Link (Optional)</label>
-                <input type="text" id="inviteLink" placeholder="https://t.me/joinchat/..." />
+                <input type="text" id="inviteLink" class="modern-input" placeholder="https://t.me/joinchat/..." />
                 <small>Use invite link to track how many users joined through this link</small>
             </div>
             <button type="submit" class="btn btn-primary">Add Channel</button>
@@ -81,9 +84,15 @@
 
     function renderChannels(channels) {
         const tbody = document.getElementById('fsubTableBody');
-        
+
         if (channels.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center">No force join channels configured</td></tr>';
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center" style="padding: 3rem; color: var(--text-muted);">
+                        <i class="fas fa-bullhorn" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                        No force join channels configured
+                    </td>
+                </tr>`;
             return;
         }
 
@@ -94,8 +103,8 @@
                 <td>${channel.channel_username ? '@' + channel.channel_username : 'N/A'}</td>
                 <td>${channel.invite_link ? `<a href="${channel.invite_link}" target="_blank">${channel.invite_link.substring(0, 40)}...</a>` : 'N/A'}</td>
                 <td>
-                    <button class="btn btn-sm btn-danger" onclick="removeChannel(${channel.channel_id})">
-                        <i class="fas fa-trash"></i> Remove
+                    <button class="action-btn" onclick="removeChannel(${channel.channel_id})" title="Remove Channel" style="color: #ef4444;">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </td>
             </tr>
@@ -117,7 +126,7 @@
 
     async function addChannel(event) {
         event.preventDefault();
-        
+
         const channelId = document.getElementById('channelId').value.trim();
         const channelTitle = document.getElementById('channelTitle').value.trim();
         const channelUsername = document.getElementById('channelUsername').value.trim().replace('@', '');
@@ -180,7 +189,7 @@
     }
 
     // Close modal when clicking outside
-    window.onclick = function(event) {
+    window.onclick = function (event) {
         const modal = document.getElementById('addChannelModal');
         if (event.target == modal) {
             closeAddChannelModal();
@@ -191,4 +200,3 @@
     document.addEventListener('DOMContentLoaded', loadFsubChannels);
 </script>
 {% endblock %}
-

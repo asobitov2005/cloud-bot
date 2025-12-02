@@ -4,31 +4,47 @@
 {% block page_title %}Files Management{% endblock %}
 
 {% block content %}
+
+
 <div class="page-header">
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search files..." oninput="searchFiles()" />
-        <!-- <i class="fas fa-search" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i> -->
+    <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search files..."
+            oninput="searchFiles()" />
     </div>
 </div>
 
-<div class="table-container">
-    <table class="data-table">
+<div class="modern-table-container">
+    <table class="modern-table">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Title</th> 
-                <th>File Size</th>
-                <th>Downloads</th>
-                <th>Created</th>
-                <th>Actions</th>
+                <th width="5%">ID</th>
+                <th width="40%">File Name</th>
+                <th width="15%">Size</th>
+                <th width="15%">Downloads</th>
+                <th width="15%">Date</th>
+                <th width="10%" class="text-center">Actions</th>
             </tr>
         </thead>
         <tbody id="filesTableBody">
             <tr>
-                <td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i> Loading...</td>
+                <td colspan="6" class="text-center" style="padding: 3rem;">
+                    <i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+                    Loading files...
+                </td>
             </tr>
         </tbody>
     </table>
+</div>
+
+<div id="paginationControls" class="pagination-container" style="display: none;">
+    <button class="pagination-btn" id="prevBtn" onclick="changePage(-1)">
+        <i class="fas fa-chevron-left"></i> Previous
+    </button>
+    <span id="pageInfo" class="page-info"></span>
+    <button class="pagination-btn" id="nextBtn" onclick="changePage(1)">
+        Next <i class="fas fa-chevron-right"></i>
+    </button>
 </div>
 
 {% endblock %}
@@ -38,24 +54,50 @@
     let currentFiles = [];
     let searchTimeout;
     let searchingMessage = null;
+    let currentPage = 1;
+    let totalFiles = 0;
+    let filesPerPage = 50;
 
-    async function loadFiles() {
+    async function loadFiles(page = 1) {
+        currentPage = page;
+        const skip = (page - 1) * filesPerPage;
+
         try {
-            const res = await fetch(`/admin/api/files`, {
+            const res = await fetch(`/admin/api/files?skip=${skip}&limit=${filesPerPage}`, {
                 credentials: 'same-origin'
             });
             if (!res.ok) await handleApiError(res);
             const data = await res.json();
             currentFiles = data.files;
+            totalFiles = data.total;
             renderFiles(currentFiles);
+            renderPagination();
         } catch (error) {
             console.error('Error loading files:', error);
         }
     }
 
+    function getFileIcon(filename, type) {
+        const ext = filename ? filename.split('.').pop().toLowerCase() : '';
+
+        if (type === 'audio' || ['mp3', 'wav', 'ogg'].includes(ext)) {
+            return '<div class="file-icon icon-audio"><i class="fas fa-music"></i></div>';
+        } else if (type === 'video' || ['mp4', 'mov', 'avi'].includes(ext)) {
+            return '<div class="file-icon icon-video"><i class="fas fa-video"></i></div>';
+        } else if (type === 'image' || ['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+            return '<div class="file-icon icon-img"><i class="fas fa-image"></i></div>';
+        } else if (['pdf'].includes(ext)) {
+            return '<div class="file-icon icon-pdf"><i class="fas fa-file-pdf"></i></div>';
+        } else if (['doc', 'docx', 'txt'].includes(ext)) {
+            return '<div class="file-icon icon-doc"><i class="fas fa-file-alt"></i></div>';
+        } else {
+            return '<div class="file-icon icon-other"><i class="fas fa-file"></i></div>';
+        }
+    }
+
     function renderFiles(files) {
         const tbody = document.getElementById('filesTableBody');
-        
+
         // Remove searching message if it exists
         if (searchingMessage) {
             searchingMessage.remove();
@@ -63,70 +105,135 @@
         }
 
         if (files.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No files found</td></tr>';
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center" style="padding: 3rem; color: var(--text-muted);">
+                        <i class="fas fa-folder-open" style="font-size: 2rem; margin-bottom: 1rem; display: block; opacity: 0.5;"></i>
+                        No files found
+                    </td>
+                </tr>`;
             return;
         }
 
         tbody.innerHTML = files.map(file => `
             <tr>
-                <td>${file.id}</td>
-                <td>${file.title}</td>
-                <td>${file.file_size_formatted || '0 B'}</td>
-                <td>${file.downloads_count}</td>
-                <td>${new Date(file.created_at).toLocaleDateString()}</td>
+                <td style="color: var(--text-muted); font-family: monospace;">#${file.id}</td>
                 <td>
-                    <button class="btn btn-sm btn-danger" onclick="deleteFile(${file.id})"><i class="fas fa-trash"></i></button>
+                    <div class="file-title-cell">
+                        ${getFileIcon(file.title, file.file_type)}
+                        <span>${file.title}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge badge-size">${file.file_size_formatted || '0 B'}</span>
+                </td>
+                <td>
+                    <span class="badge badge-downloads">
+                        <i class="fas fa-download" style="font-size: 0.7rem; margin-right: 4px;"></i>
+                        ${file.downloads_count}
+                    </span>
+                </td>
+                <td style="color: var(--text-muted); font-size: 0.85rem;">
+                    ${new Date(file.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                </td>
+                <td class="text-center">
+                    <button class="action-btn" onclick="deleteFile(${file.id})" title="Delete File">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </td>
             </tr>
         `).join('');
     }
 
+    function renderPagination() {
+        const paginationControls = document.getElementById('paginationControls');
+        const pageInfo = document.getElementById('pageInfo');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        const totalPages = Math.ceil(totalFiles / filesPerPage);
+
+        // Hide pagination if only one page or no files
+        if (totalPages <= 1) {
+            paginationControls.style.display = 'none';
+            return;
+        }
+
+        paginationControls.style.display = 'flex';
+        pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+
+        // Disable/enable buttons
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+    }
+
+    function changePage(delta) {
+        const newPage = currentPage + delta;
+        const totalPages = Math.ceil(totalFiles / filesPerPage);
+
+        if (newPage >= 1 && newPage <= totalPages) {
+            loadFiles(newPage);
+            // Scroll to top of table
+            const table = document.querySelector('.modern-table-container');
+            if (table) {
+                table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    }
+
     // Debounced search function
     function searchFiles() {
         clearTimeout(searchTimeout);
-        
+
         const query = document.getElementById('searchInput').value.toLowerCase().trim();
-        
+
         // Show searching message if there's a query
         if (query !== '') {
             // Remove previous searching message if exists
             if (searchingMessage) {
                 searchingMessage.remove();
             }
-            
+
             // Create and show searching message
             const tbody = document.getElementById('filesTableBody');
             searchingMessage = document.createElement('tr');
             searchingMessage.id = 'searchingMessage';
-            searchingMessage.innerHTML = `<td colspan="6" class="text-center" style="font-style: italic; color: #6b7280; padding: 2rem;"><i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem;"></i>Qidirilmoqda.....</td>`;
+            searchingMessage.innerHTML = `
+                <td colspan="6" class="text-center" style="padding: 3rem; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+                    Searching...
+                </td>`;
             tbody.innerHTML = '';
             tbody.appendChild(searchingMessage);
+
+            // Hide pagination during search
+            document.getElementById('paginationControls').style.display = 'none';
         } else {
             // Clear searching message if query is empty
             if (searchingMessage) {
                 searchingMessage.remove();
                 searchingMessage = null;
             }
-            renderFiles(currentFiles);
+            // Reload full list with pagination
+            loadFiles(1);
             return;
         }
-        
+
         searchTimeout = setTimeout(() => {
             const filtered = currentFiles.filter(f =>
                 f.title.toLowerCase().includes(query)
             );
-            
+
             // Remove searching message
             if (searchingMessage) {
                 searchingMessage.remove();
                 searchingMessage = null;
             }
-            
-            // Render results
+
+            // Render results (without pagination for search)
             renderFiles(filtered);
         }, 300); // 300ms debounce
     }
-
 
     async function deleteFile(fileId) {
         showConfirmDialog(
@@ -139,7 +246,7 @@
                     });
                     if (!res.ok) await handleApiError(res);
 
-                    loadFiles();
+                    loadFiles(currentPage);
                     showNotification('File deleted successfully!', 'success');
                 } catch (error) {
                     console.error('Error deleting file:', error);
@@ -149,6 +256,6 @@
         );
     }
 
-    loadFiles();
+    loadFiles(1);
 </script>
 {% endblock %}

@@ -54,6 +54,17 @@ async def add_fsub_channel(
     if invite_link == "":
         invite_link = None
     
+    # Handle case where channel_id is provided as a username string (e.g. "@username")
+    if channel_id:
+        try:
+            # Try to convert to int to check if it's a valid ID
+            int(channel_id)
+        except (ValueError, TypeError):
+            # If not an integer, treat as username if not already provided
+            if not channel_username:
+                channel_username = str(channel_id)
+            channel_id = None
+    
     # Try to get channel_id from username if not provided
     if not channel_id and channel_username:
         try:

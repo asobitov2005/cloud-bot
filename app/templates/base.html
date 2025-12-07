@@ -42,6 +42,24 @@
                 <a href="/admin/fsub" class="nav-item {% block fsub_active %}{% endblock %}">
                     <span><i class="fas fa-bullhorn"></i></span> Force Join
                 </a>
+
+                <!-- Super Admin Section -->
+                <div class="nav-divider"
+                    style="margin: 1rem 0; border-top: 1px solid var(--border-color); opacity: 0.3;"></div>
+                <div class="nav-section-title"
+                    style="padding: 0.5rem 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">
+                    Super Admin</div>
+
+                <a href="/admin/admins" class="nav-item {% block admins_active %}{% endblock %}">
+                    <span><i class="fas fa-user-shield"></i></span> Admins
+                </a>
+                <a href="/admin/logs" class="nav-item {% block logs_active %}{% endblock %}">
+                    <span><i class="fas fa-history"></i></span> Audit Logs
+                </a>
+
+                <div class="nav-divider"
+                    style="margin: 1rem 0; border-top: 1px solid var(--border-color); opacity: 0.3;"></div>
+
                 <a href="/admin/settings" class="nav-item {% block settings_active %}{% endblock %}">
                     <span><i class="fas fa-cog"></i></span> Settings
                 </a>
@@ -54,8 +72,17 @@
             </div>
         </nav>
 
-        <!-- Main content -->
-        <main class="main-content">
+        <!-- Main content with smooth transitions -->
+        <main class="main-content" id="mainContent">
+            <!-- Loading overlay -->
+            <div id="pageLoader"
+                style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-main); z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;">
+                <div style="text-align: center;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: var(--primary-color);"></i>
+                    <p style="margin-top: 1rem; color: var(--text-muted);">Loading...</p>
+                </div>
+            </div>
+
             <!-- Top Bar for Mobile & Theme Toggle -->
             <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem; gap: 1rem;">
                 <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
@@ -63,7 +90,10 @@
                 </button>
             </div>
 
-            {% block content %}{% endblock %}
+            <!-- Page content with fade-in animation -->
+            <div class="page-content" style="animation: fadeIn 0.3s ease-in;">
+                {% block content %}{% endblock %}
+            </div>
         </main>
     </div>
 

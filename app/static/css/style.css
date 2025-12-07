@@ -466,3 +466,134 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==================== SMOOTH ANIMATIONS ==================== */
+
+/* Fade In Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Slide Up Animation */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Pulse Animation for Loading */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Page Content Transitions */
+.page-content {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Card Stagger Animation */
+.stat-card,
+.chart-card {
+    animation: slideUp 0.4s ease-out;
+    animation-fill-mode: both;
+}
+
+.stat-card:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.stat-card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.stat-card:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.stat-card:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+/* Table Row Animation */
+.modern-table tbody tr {
+    animation: fadeIn 0.3s ease-in;
+    animation-fill-mode: both;
+}
+
+/* Nav Item Hover Effect */
+.nav-item {
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 0;
+    background: var(--primary-color);
+    transition: height 0.2s ease;
+    border-radius: 0 3px 3px 0;
+}
+
+.nav-item:hover::before,
+.nav-item.active::before {
+    height: 60%;
+}
+
+/* Smooth Link Transitions */
+a,
+button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Loading Spinner */
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Smooth Scroll */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Focus States */
+*:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}

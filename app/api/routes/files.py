@@ -31,9 +31,13 @@ async def get_files(
     db: AsyncSession = Depends(get_db),
     token: dict = Depends(verify_token)
 ):
-    """Get files list with optional filtering and search"""
+    """Get files list with optional filtering and search (with lazy file size loading)"""
     from app.models.crud import get_all_files, get_files_count, search_files
     from app.bot.helpers import format_file_size
+    from app.bot.main import _bot_instance
+    import logging
+    
+    logger = logging.getLogger(__name__)
     
     if search:
         files = await search_files(db, query=search, file_type=file_type, skip=skip, limit=limit)
@@ -42,19 +46,33 @@ async def get_files(
         files = await get_all_files(db, file_type=file_type, skip=skip, limit=limit)
         total = await get_files_count(db, file_type=file_type)
     
-    # Return file data with size from database
-    files_data = [
-        {
+    # Lazy loading: fetch and save file sizes for files without size
+    files_data = []
+    for f in files:
+        file_size = f.file_size
+        
+        # If size is not in database and bot is available, fetch and save it
+        if file_size is None and _bot_instance:
+            try:
+                file_info = await _bot_instance.get_file(f.file_id)
+                if file_info and file_info.file_size:
+                    file_size = file_info.file_size
+                    # Save to database for next time
+                    f.file_size = file_size
+                    await db.commit()
+                    logger.info(f"✅ Fetched and saved size for: {f.title} ({file_size} bytes)")
+            except Exception as e:
+                logger.warning(f"⚠️ Could not fetch size for {f.title}: {e}")
+        
+        files_data.append({
             "id": f.id,
             "title": f.title,
             "file_type": f.file_type,
-            "file_size": f.file_size or 0,
-            "file_size_formatted": format_file_size(f.file_size) if f.file_size else "Unknown",
+            "file_size": file_size or 0,
+            "file_size_formatted": format_file_size(file_size) if file_size else "Unknown",
             "downloads_count": f.downloads_count,
             "created_at": f.created_at.isoformat()
-        }
-        for f in files
-    ]
+        })
     
     return {
         "files": files_data,

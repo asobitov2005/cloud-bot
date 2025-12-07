@@ -3,14 +3,132 @@ from sqlalchemy import select, func, desc, or_, and_, text, cast, Date, String
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
-from app.models.base import User, File, Download, SavedList
+from app.models.base import User, File, Download, SavedList, AdminUser, AdminLog, AdminRole
 from app.models.settings import Settings
+import json
+
 try:
     from app.models.health import HealthCheck
 except ImportError:
     # HealthCheck model might not exist yet (migration needed)
     HealthCheck = None
 
+
+# ==================== ADMIN USER CRUD ====================
+
+async def get_admin_by_username(db: AsyncSession, username: str) -> Optional[AdminUser]:
+    """Get admin user by username"""
+    result = await db.execute(select(AdminUser).where(AdminUser.username == username))
+    return result.scalar_one_or_none()
+
+
+async def get_admin_by_id(db: AsyncSession, admin_id: int) -> Optional[AdminUser]:
+    """Get admin user by ID"""
+    result = await db.execute(select(AdminUser).where(AdminUser.id == admin_id))
+    return result.scalar_one_or_none()
+
+
+async def create_admin_user(
+    db: AsyncSession,
+    username: str,
+    password_hash: str,
+    full_name: str = None,
+    email: str = None,
+    role: AdminRole = AdminRole.ADMIN
+) -> AdminUser:
+    """Create new admin user"""
+    admin = AdminUser(
+        username=username,
+        password_hash=password_hash,
+        full_name=full_name,
+        email=email,
+        role=role
+    )
+    db.add(admin)
+    await db.commit()
+    await db.refresh(admin)
+    return admin
+
+
+async def update_admin_last_login(db: AsyncSession, admin_id: int):
+    """Update admin's last login timestamp"""
+    result = await db.execute(select(AdminUser).where(AdminUser.id == admin_id))
+    admin = result.scalar_one_or_none()
+    if admin:
+        admin.last_login = datetime.utcnow()
+        await db.commit()
+
+
+async def get_all_admins(db: AsyncSession) -> List[AdminUser]:
+    """Get all admin users"""
+    result = await db.execute(
+        select(AdminUser).order_by(AdminUser.created_at.desc())
+    )
+    return result.scalars().all()
+
+
+async def delete_admin_user(db: AsyncSession, admin_id: int) -> bool:
+    """Delete admin user (soft delete - set is_active to False)"""
+    result = await db.execute(select(AdminUser).where(AdminUser.id == admin_id))
+    admin = result.scalar_one_or_none()
+    if admin:
+        admin.is_active = False
+        await db.commit()
+        return True
+    return False
+
+
+# ==================== ADMIN AUDIT LOG CRUD ====================
+
+async def log_admin_action(
+    db: AsyncSession,
+    admin_id: int,
+    action_type: str,
+    target_type: str = None,
+    target_id: str = None,
+    details: dict = None,
+    ip_address: str = None,
+    user_agent: str = None
+):
+    """Log an admin action for audit trail"""
+    log = AdminLog(
+        admin_id=admin_id,
+        action_type=action_type,
+        target_type=target_type,
+        target_id=str(target_id) if target_id else None,
+        details=json.dumps(details) if details else None,
+        ip_address=ip_address,
+        user_agent=user_agent
+    )
+    db.add(log)
+    await db.commit()
+
+
+async def get_admin_logs(
+    db: AsyncSession,
+    skip: int = 0,
+    limit: int = 100,
+    admin_id: int = None,
+    action_type: str = None
+) -> List[AdminLog]:
+    """Get admin logs with filters"""
+    query = select(AdminLog).order_by(AdminLog.created_at.desc())
+    
+    if admin_id:
+        query = query.where(AdminLog.admin_id == admin_id)
+    
+    if action_type:
+        query = query.where(AdminLog.action_type == action_type)
+    
+    query = query.offset(skip).limit(limit)
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
+async def get_admin_logs_count(db: AsyncSession) -> int:
+    """Get total count of admin logs"""
+    result = await db.execute(select(func.count(AdminLog.id)))
+    return result.scalar() or 0
 
 # ==================== USER CRUD ====================
 

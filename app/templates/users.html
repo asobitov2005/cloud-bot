@@ -186,7 +186,7 @@
                 '<span class="badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;"><i class="fas fa-crown"></i> Super Admin</span>' :
                 user.is_admin ?
                     `<div>
-                        <span class="badge" style="background: #667eea; color: white; cursor: pointer; transition: opacity 0.2s;" onclick="editPermissions('${user.id}')" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"><i class="fas fa-shield-alt"></i> Admin <i class="fas fa-edit" style="font-size: 0.8em; margin-left: 5px;"></i></span>
+                        <span class="badge" style="background: #667eea; color: white; cursor: pointer; transition: opacity 0.2s;" onclick="editPermissions(${user.id})" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"><i class="fas fa-shield-alt"></i> Admin <i class="fas fa-edit" style="font-size: 0.8em; margin-left: 5px;"></i></span>
                         ${user.permissions && user.permissions.length > 0 ?
                         '<div style="margin-top: 5px;"><small style="font-size: 0.75em; color: #666; display: block; word-break: break-word;">' + user.permissions.join(', ') + '</small></div>' :
                         '<div style="margin-top: 5px;"><small style="font-size: 0.75em; color: #999;">No permissions</small></div>'
@@ -204,13 +204,13 @@
                 <td style="white-space: nowrap; min-width: 250px;">
                     <div style="display: flex; flex-wrap: wrap; gap: 5px;">
                         ${user.is_blocked ?
-                `<button class="action-btn" onclick="unblockUser('${user.id}')" title="Unblock User" style="color: #10b981;"><i class="fas fa-unlock"></i></button>` :
-                `<button class="action-btn" onclick="blockUser('${user.id}')" title="Block User" style="color: #ef4444;"><i class="fas fa-ban"></i></button>`
+                `<button class="action-btn" onclick="unblockUser(${user.id})" title="Unblock User" style="color: #10b981;"><i class="fas fa-unlock"></i></button>` :
+                `<button class="action-btn" onclick="blockUser(${user.id})" title="Block User" style="color: #ef4444;"><i class="fas fa-ban"></i></button>`
             }
                         ${!user.is_primary_admin ?
                 (user.is_admin ?
-                    `<button class="action-btn" onclick="removeAdmin('${user.id}')" title="Remove Admin" style="color: #f59e0b;"><i class="fas fa-user-minus"></i></button>` :
-                    `<button class="action-btn" onclick="showMakeAdminModal('${user.id}')" title="Make Admin" style="color: #6366f1;"><i class="fas fa-user-shield"></i></button>`) :
+                    `<button class="action-btn" onclick="removeAdmin(${user.id})" title="Remove Admin" style="color: #f59e0b;"><i class="fas fa-user-minus"></i></button>` :
+                    `<button class="action-btn" onclick="showMakeAdminModal(${user.id})" title="Make Admin" style="color: #6366f1;"><i class="fas fa-user-shield"></i></button>`) :
                 ''
             }
                     </div>
@@ -347,7 +347,7 @@
 
     async function makeAdminWithPermissions(event) {
         event.preventDefault();
-        const userId = parseInt(document.getElementById('adminUserId').value);
+        const userId = document.getElementById('adminUserId').value;
         const selectedPermissions = Array.from(document.querySelectorAll('#permissionsList input[type="checkbox"]:checked'))
             .map(cb => cb.value);
 
@@ -404,7 +404,7 @@
 
     async function updatePermissions(event) {
         event.preventDefault();
-        const userId = parseInt(document.getElementById('editPermissionsUserId').value);
+        const userId = document.getElementById('editPermissionsUserId').value;
         const selectedPermissions = Array.from(document.querySelectorAll('#editPermissionsList input[type="checkbox"]:checked'))
             .map(cb => cb.value);
 

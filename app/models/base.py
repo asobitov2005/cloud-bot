@@ -1,14 +1,69 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, BigInteger, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, BigInteger, Text, Enum
 from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime
+import enum
 
 Base = declarative_base()
 
-# Import HealthCheck model to ensure it's registered with Base
+# Import models to ensure they're registered with Base
 try:
     from app.models.health import HealthCheck
 except ImportError:
     HealthCheck = None
+
+
+# Admin Role Enum
+class AdminRole(str, enum.Enum):
+    """Admin role types"""
+    SUPER_ADMIN = "super_admin"
+    ADMIN = "admin"
+
+
+# ==================== ADMIN MODELS ====================
+
+class AdminUser(Base):
+    """Separate admin user table for dashboard access"""
+    __tablename__ = "admin_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, nullable=False, index=True)
+    password_hash = Column(String, nullable=False)
+    full_name = Column(String, nullable=True)
+    email = Column(String, nullable=True)
+    role = Column(Enum(AdminRole), nullable=False, default=AdminRole.ADMIN)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_login = Column(DateTime, nullable=True)
+
+    # Relationships
+    logs = relationship("AdminLog", back_populates="admin", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<AdminUser {self.username} ({self.role})>"
+
+
+class AdminLog(Base):
+    """Audit log for all admin actions"""
+    __tablename__ = "admin_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    admin_id = Column(Integer, ForeignKey("admin_users.id"), nullable=False)
+    action_type = Column(String, nullable=False, index=True)  # login, create, update, delete, etc.
+    target_type = Column(String, nullable=True)  # user, file, admin, settings, etc.
+    target_id = Column(String, nullable=True)  # ID of the affected resource
+    details = Column(Text, nullable=True)  # JSON with additional info
+    ip_address = Column(String, nullable=True)
+    user_agent = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    # Relationships
+    admin = relationship("AdminUser", back_populates="logs")
+
+    def __repr__(self):
+        return f"<AdminLog {self.action_type} by admin_id={self.admin_id}>"
+
+
+# ==================== BOT USER MODELS ====================
 
 class User(Base):
     __tablename__ = "users"

@@ -82,6 +82,8 @@ class Settings(BaseSettings):
     # Admin Panel
     ADMIN_PANEL_HOST: str = "0.0.0.0"
     ADMIN_PANEL_PORT: int = 8000
+    ADMIN_USERNAME: str = "admin"
+    ADMIN_PASSWORD: str = "admin"
     
     
     # Pagination

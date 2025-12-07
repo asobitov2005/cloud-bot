@@ -31,44 +31,27 @@ async def get_files(
     db: AsyncSession = Depends(get_db),
     token: dict = Depends(verify_token)
 ):
-    """Get files list with optional filtering and search"""
+    """Get files list with optional filtering and search (optimized - removed Telegram API calls)"""
     from app.models.crud import get_all_files, get_files_count, search_files
-    from app.bot.helpers import format_file_size
-    from app.bot.main import _bot_instance
     
     if search:
         files = await search_files(db, query=search, file_type=file_type, skip=skip, limit=limit)
-        total = len(files)
+        total = len(files)  # search_files returns limited results
     else:
         files = await get_all_files(db, file_type=file_type, skip=skip, limit=limit)
         total = await get_files_count(db, file_type=file_type)
     
-    files_data = []
-    for f in files:
-        file_size_bytes = 0
-        file_size_formatted = "Unknown"
-        
-        # Try to get file size from bot if available
-        if _bot_instance:
-            try:
-                # We need to be careful about rate limits here
-                # Ideally we should store file size in DB to avoid this API call
-                file_info = await _bot_instance.get_file(f.file_id)
-                if file_info and file_info.file_size:
-                    file_size_bytes = file_info.file_size
-                    file_size_formatted = format_file_size(file_size_bytes)
-            except Exception:
-                pass
-        
-        files_data.append({
+    # Optimized: No Telegram API calls - much faster!
+    files_data = [
+        {
             "id": f.id,
             "title": f.title,
             "file_type": f.file_type,
-            "file_size": file_size_bytes,
-            "file_size_formatted": file_size_formatted,
             "downloads_count": f.downloads_count,
             "created_at": f.created_at.isoformat()
-        })
+        }
+        for f in files
+    ]
     
     return {
         "files": files_data,

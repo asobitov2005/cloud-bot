@@ -68,6 +68,7 @@
     </div>
 
     <!-- Global Scripts -->
+    <script src="/static/js/admin.js"></script>
     <script>
         // Theme Management
         const themeToggle = document.getElementById('themeToggle');
@@ -97,64 +98,6 @@
                 icon.classList.add('fa-moon');
             }
         }
-
-        // Mobile Menu Toggle (Optional implementation if needed later)
-        // For now relying on CSS media queries for simple responsiveness
-
-        // Helper for formatting numbers
-        function formatNumber(num) {
-            return new Intl.NumberFormat().format(num);
-        }
-
-        // Helper for API errors
-        async function handleApiError(response) {
-            if (response.status === 401) {
-                window.location.href = '/admin/login';
-                return;
-            }
-            const data = await response.json().catch(() => ({}));
-            const message = data.detail || 'An error occurred';
-            showNotification(message, 'error');
-            throw new Error(message);
-        }
-
-        // Notification System
-        function showNotification(message, type = 'info') {
-            const div = document.createElement('div');
-            div.className = `notification ${type}`;
-            div.style.position = 'fixed';
-            div.style.top = '20px';
-            div.style.right = '20px';
-            div.style.padding = '1rem 1.5rem';
-            div.style.borderRadius = 'var(--radius-md)';
-            div.style.backgroundColor = type === 'error' ? 'var(--danger-color)' : 'var(--success-color)';
-            div.style.color = 'white';
-            div.style.boxShadow = 'var(--shadow-lg)';
-            div.style.zIndex = '1000';
-            div.style.animation = 'slideIn 0.3s ease';
-            div.textContent = message;
-
-            document.body.appendChild(div);
-
-            setTimeout(() => {
-                div.style.animation = 'slideOut 0.3s ease forwards';
-                setTimeout(() => div.remove(), 300);
-            }, 3000);
-        }
-
-        // Add keyframes for notification
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 
     {% block scripts %}{% endblock %}

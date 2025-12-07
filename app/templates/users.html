@@ -169,8 +169,16 @@
             <tr>
                 <td>${user.id}</td>
                 <td>${user.telegram_id}</td>
-                <td>@${user.username || 'N/A'}</td>
-                <td>${user.full_name || 'Unknown'}</td>
+                <td>
+                    <div style="max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="@${user.username || 'N/A'}">
+                        @${user.username || 'N/A'}
+                    </div>
+                </td>
+                <td>
+                    <div style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${user.full_name || 'Unknown'}">
+                        ${user.full_name || 'Unknown'}
+                    </div>
+                </td>
                 
                 <td>${new Date(user.joined_at).toLocaleDateString()}</td>
                 <td style="min-width: 150px;">

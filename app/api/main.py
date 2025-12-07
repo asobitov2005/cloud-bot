@@ -78,7 +78,7 @@ async def startup_event():
     from app.bot.main import set_bot_instance
     
     # Initialize bot
-    bot, _ = init_bot()
+    bot, _ = init_bot(with_dispatcher=False)
     
     # Store bot instance for API access
     set_bot_instance(bot)

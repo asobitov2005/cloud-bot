@@ -113,10 +113,14 @@ async def get_storage():
     return MemoryStorage()
 
 
-def init_bot():
+def init_bot(with_dispatcher=True):
     """Initialize bot with all components"""
     global storage, dp
     
+    # If we only need the bot instance (e.g. for API), skip dispatcher setup
+    if not with_dispatcher:
+        return bot, None
+
     # Use MemoryStorage initially - will be upgraded to Redis in on_startup if available
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)

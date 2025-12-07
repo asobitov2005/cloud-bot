@@ -28,17 +28,42 @@ async def get_dashboard_stats(
     db: AsyncSession = Depends(get_db),
     token: dict = Depends(verify_token)
 ):
-    """Get dashboard statistics"""
+    """Get dashboard statistics (optimized with parallel queries)"""
     import logging
+    import asyncio
     logger = logging.getLogger(__name__)
     
     try:
-        users_count = await get_users_count(db)
-        files_count = await get_files_count(db)
-        downloads_count = await get_total_downloads(db)
+        # Execute all queries in parallel for maximum performance ⚡
+        (
+            users_count,
+            files_count,
+            downloads_count,
+            top_files,
+            downloads_data,
+            user_growth_data,
+            user_country_data,
+            users_joined,
+            users_left,
+            files_volume,
+            downloads_by_period,
+            health_stats
+        ) = await asyncio.gather(
+            get_users_count(db),
+            get_files_count(db),
+            get_total_downloads(db),
+            get_top_downloaded_files(db, limit=5),
+            get_downloads_by_date(db, days=7),
+            get_user_growth(db, days=30),
+            get_users_by_country(db),
+            get_users_joined_stats(db),
+            get_users_left_stats(db),
+            get_total_files_volume(db),
+            get_downloads_by_period(db),
+            get_health_stats(db, days=30)
+        )
         
-        # Get top files with error handling (file might be None if deleted)
-        top_files = await get_top_downloaded_files(db, limit=5)
+        # Process top files data
         top_files_data = []
         for item in top_files:
             if item.get("file"):  # Check if file still exists
@@ -52,15 +77,6 @@ async def get_dashboard_stats(
                     "title": "[Deleted File]",
                     "downloads": item["downloads"]
                 })
-        
-        downloads_data = await get_downloads_by_date(db, days=7)
-        user_growth_data = await get_user_growth(db, days=30)  # Show last 30 days of user growth
-        user_country_data = await get_users_by_country(db)
-        users_joined = await get_users_joined_stats(db)
-        users_left = await get_users_left_stats(db)
-        files_volume = await get_total_files_volume(db)
-        downloads_by_period = await get_downloads_by_period(db)
-        health_stats = await get_health_stats(db, days=30)
         
         return {
             "total_users": users_count,

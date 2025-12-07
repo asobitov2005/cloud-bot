@@ -627,35 +627,16 @@ async def get_users_left_stats(db: AsyncSession) -> Dict[str, int]:
 
 
 async def get_total_files_volume(db: AsyncSession) -> Dict[str, Any]:
-    """Get total files volume in bytes"""
+    """Get total files count (optimized - removed slow Telegram API calls)"""
     try:
-        from app.bot.main import _bot_instance
-        if not _bot_instance:
-            return {"total_bytes": 0, "formatted": "0 B"}
-        
-        # Get all files
-        files_query = select(File)
-        files_result = await db.execute(files_query)
-        files = files_result.scalars().all()
-        
-        total_bytes = 0
-        for file in files:
-            try:
-                file_info = await _bot_instance.get_file(file.file_id)
-                if file_info and file_info.file_size:
-                    total_bytes += file_info.file_size
-            except Exception:
-                # Skip files we can't get info for
-                continue
-        
-        # Format bytes
-        from app.bot.helpers import format_file_size
+        # Just count files - much faster than fetching size for each file
+        files_count = await get_files_count(db)
         return {
-            "total_bytes": total_bytes,
-            "formatted": format_file_size(total_bytes)
+            "total_files": files_count,
+            "formatted": f"{files_count} files"
         }
     except Exception:
-        return {"total_bytes": 0, "formatted": "0 B"}
+        return {"total_files": 0, "formatted": "0 files"}
 
 
 async def get_downloads_by_period(db: AsyncSession) -> Dict[str, List[Dict[str, Any]]]:

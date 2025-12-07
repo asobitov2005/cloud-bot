@@ -111,6 +111,7 @@ async def block_user(db: AsyncSession, user_id: int) -> User:
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one()
     user.is_blocked = True
+    user.blocked_at = datetime.utcnow()  # Set blocked timestamp
     await db.commit()
     await db.refresh(user)
     return user
@@ -121,6 +122,7 @@ async def unblock_user(db: AsyncSession, user_id: int) -> User:
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one()
     user.is_blocked = False
+    user.blocked_at = None  # Clear blocked timestamp
     await db.commit()
     await db.refresh(user)
     return user
@@ -585,20 +587,18 @@ async def get_users_joined_stats(db: AsyncSession) -> Dict[str, int]:
 
 
 async def get_users_left_stats(db: AsyncSession) -> Dict[str, int]:
-    """Get users left: today, this week, this month (blocked users)"""
+    """Get users left/blocked: today, this week, this month"""
     now = datetime.utcnow()
     today_start = datetime(now.year, now.month, now.day)
     week_start = today_start - timedelta(days=now.weekday())
     month_start = datetime(now.year, now.month, 1)
     
-    # Note: We track blocked users, but we don't have a "left_at" timestamp
-    # So we'll use blocked users as a proxy for users who left
-    # For more accurate tracking, we'd need to add a "left_at" field
+    # Count users blocked during each time period
     
-    # Today (blocked today - approximate)
+    # Today
     today_query = select(func.count(User.id)).where(
         User.is_blocked == True,
-        User.joined_at >= today_start  # Approximate: users who joined and were blocked today
+        User.blocked_at >= today_start
     )
     today_result = await db.execute(today_query)
     today_count = today_result.scalar() or 0
@@ -606,7 +606,7 @@ async def get_users_left_stats(db: AsyncSession) -> Dict[str, int]:
     # This week
     week_query = select(func.count(User.id)).where(
         User.is_blocked == True,
-        User.joined_at >= week_start
+        User.blocked_at >= week_start
     )
     week_result = await db.execute(week_query)
     week_count = week_result.scalar() or 0
@@ -614,7 +614,7 @@ async def get_users_left_stats(db: AsyncSession) -> Dict[str, int]:
     # This month
     month_query = select(func.count(User.id)).where(
         User.is_blocked == True,
-        User.joined_at >= month_start
+        User.blocked_at >= month_start
     )
     month_result = await db.execute(month_query)
     month_count = month_result.scalar() or 0

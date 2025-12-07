@@ -21,6 +21,7 @@ class User(Base):
     gender = Column(String, nullable=True)  # 'male', 'female', 'other', or None
     joined_at = Column(DateTime, default=datetime.utcnow)
     is_blocked = Column(Boolean, default=False)
+    blocked_at = Column(DateTime, nullable=True)  # Track when user was blocked
     is_admin = Column(Boolean, default=False, index=True)
     admin_permissions = Column(Text, nullable=True)  # JSON string of permissions
 

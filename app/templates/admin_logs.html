@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block logs_active %}active{% endblock %}
+{% block page_title %}Audit Logs{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1><i class="fas fa-history"></i> Audit Logs</h1>
+    <div style="display: flex; gap: 1rem;">
+        <select id="filterAction" onchange="loadLogs()"
+            style="padding: 0.5rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-card); color: var(--text-main);">
+            <option value="">All Actions</option>
+            <option value="login">Login</option>
+            <option value="logout">Logout</option>
+            <option value="create_admin">Create Admin</option>
+            <option value="delete_admin">Delete Admin</option>
+        </select>
+    </div>
+</div>
+
+<div class="modern-table-container">
+    <table class="modern-table">
+        <thead>
+            <tr>
+                <th style="width: 60px;">ID</th>
+                <th style="width: 150px;">Timestamp</th>
+                <th style="width: 120px;">Admin</th>
+                <th style="width: 150px;">Action</th>
+                <th style="width: 120px;">Target</th>
+                <th>Details</th>
+                <th style="width: 130px;">IP Address</th>
+            </tr>
+        </thead>
+        <tbody id="logsTableBody">
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 3rem;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                    <p style="margin-top: 1rem; color: var(--text-muted);">Loading logs...</p>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div id="paginationControls" class="pagination-container" style="display: none;">
+    <button class="pagination-btn" id="prevBtn" onclick="changePage(-1)">
+        <i class="fas fa-chevron-left"></i> Previous
+    </button>
+    <span id="pageInfo" class="page-info"></span>
+    <button class="pagination-btn" id="nextBtn" onclick="changePage(1)">
+        Next <i class="fas fa-chevron-right"></i>
+    </button>
+</div>
+
+<script>
+    let currentPage = 0;
+    const logsPerPage = 50;
+    let totalLogs = 0;
+
+    async function loadLogs(page = 0) {
+        currentPage = page;
+        const skip = page * logsPerPage;
+        const actionFilter = document.getElementById('filterAction').value;
+
+        let url = `/admin/api/logs?skip=${skip}&limit=${logsPerPage}`;
+        if (actionFilter) url += `&action_type=${actionFilter}`;
+
+        try {
+            const res = await fetch(url, { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('Failed to load logs');
+            const data = await res.json();
+            totalLogs = data.total;
+            renderLogs(data.logs);
+            renderPagination();
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Failed to load logs', 'error');
+        }
+    }
+
+    function getActionBadgeStyle(actionType) {
+        const styles = {
+            'login': 'background: rgba(16, 185, 129, 0.1); color: var(--success-color);',
+            'logout': 'background: rgba(100, 116, 139, 0.1); color: var(--secondary-color);',
+            'login_failed': 'background: rgba(239, 68, 68, 0.1); color: var(--danger-color);',
+            'create_admin': 'background: rgba(59, 130, 246, 0.1); color: var(--info-color);',
+            'delete_admin': 'background: rgba(239, 68, 68, 0.1); color: var(--danger-color);',
+        };
+        return styles[actionType] || 'background: var(--bg-input); color: var(--text-muted);';
+    }
+
+    function getActionIcon(actionType) {
+        const icons = {
+            'login': 'fa-sign-in-alt',
+            'logout': 'fa-sign-out-alt',
+            'login_failed': 'fa-exclamation-triangle',
+            'create_admin': 'fa-user-plus',
+            'delete_admin': 'fa-user-minus',
+        };
+        return icons[actionType] || 'fa-circle';
+    }
+
+    function renderLogs(logs) {
+        const tbody = document.getElementById('logsTableBody');
+
+        if (logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);"><i class="fas fa-inbox" style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1rem;"></i>No logs found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = logs.map(log => {
+            const details = log.details ? (typeof log.details === 'string' ? log.details : JSON.stringify(log.details, null, 2)) : 'N/A';
+            const detailsPreview = details.length > 50 ? details.substring(0, 50) + '...' : details;
+
+            return `
+        <tr>
+            <td><span style="font-family: monospace; color: var(--text-muted);">#${log.id}</span></td>
+            <td>
+                <div style="font-size: 0.875rem;">
+                    <div><strong>${new Date(log.created_at).toLocaleDateString()}</strong></div>
+                    <div style="color: var(--text-muted); font-size: 0.75rem;">${new Date(log.created_at).toLocaleTimeString()}</div>
+                </div>
+            </td>
+            <td><strong>${log.admin_username}</strong></td>
+            <td>
+                <span class="badge" style="${getActionBadgeStyle(log.action_type)}">
+                    <i class="fas ${getActionIcon(log.action_type)}"></i>
+                    ${log.action_type.replace(/_/g, ' ')}
+                </span>
+            </td>
+            <td>
+                ${log.target_type ? `<span class="badge badge-size">${log.target_type}${log.target_id ? ` #${log.target_id}` : ''}</span>` : '<span style="color: var(--text-muted);">-</span>'}
+            </td>
+            <td>
+                <div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.875rem; color: var(--text-muted);" title="${details}">
+                    ${detailsPreview}
+                </div>
+            </td>
+            <td>
+                <span style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);">
+                    ${log.ip_address || 'N/A'}
+                </span>
+            </td>
+        </tr>
+    `}).join('');
+    }
+
+    function renderPagination() {
+        const paginationControls = document.getElementById('paginationControls');
+        const pageInfo = document.getElementById('pageInfo');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        const totalPages = Math.ceil(totalLogs / logsPerPage);
+
+        if (totalPages <= 1) {
+            paginationControls.style.display = 'none';
+            return;
+        }
+
+        paginationControls.style.display = 'flex';
+        pageInfo.textContent = `Page ${currentPage + 1} of ${totalPages} (${totalLogs} total logs)`;
+
+        prevBtn.disabled = currentPage === 0;
+        nextBtn.disabled = currentPage === totalPages - 1;
+    }
+
+    function changePage(delta) {
+        const newPage = currentPage + delta;
+        const totalPages = Math.ceil(totalLogs / logsPerPage);
+
+        if (newPage >= 0 && newPage < totalPages) {
+            loadLogs(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    loadLogs();
+</script>
+{% endblock %}

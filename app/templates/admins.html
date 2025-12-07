@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block admins_active %}active{% endblock %}
+{% block page_title %}Admin Management{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1><i class="fas fa-user-shield"></i> Admin Management</h1>
+    <button class="btn btn-primary" onclick="showCreateAdminModal()">
+        <i class="fas fa-plus"></i> Create Admin
+    </button>
+</div>
+
+<div class="modern-table-container">
+    <table class="modern-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Last Login</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="adminsTableBody">
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 3rem;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                    <p style="margin-top: 1rem; color: var(--text-muted);">Loading admins...</p>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Create Admin Modal -->
+<div id="createAdminModal" class="modal"
+    style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px);">
+    <div class="modal-content"
+        style="background-color: var(--bg-card); margin: 10% auto; padding: 2rem; border: 1px solid var(--border-color); width: 90%; max-width: 500px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);">
+        <span class="close" onclick="closeCreateAdminModal()"
+            style="color: var(--text-muted); float: right; font-size: 1.5rem; font-weight: bold; cursor: pointer;">&times;</span>
+        <h2 style="margin-bottom: 1.5rem; color: var(--text-main);">Create New Admin</h2>
+        <form id="createAdminForm" onsubmit="createAdmin(event)">
+            <div style="margin-bottom: 1rem;">
+                <label
+                    style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">Username</label>
+                <input type="text" id="newUsername" required
+                    style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label
+                    style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">Password</label>
+                <input type="password" id="newPassword" required minlength="6"
+                    style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">Full
+                    Name (Optional)</label>
+                <input type="text" id="newFullName"
+                    style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">Email
+                    (Optional)</label>
+                <input type="email" id="newEmail"
+                    style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 500;">Role</label>
+                <select id="newRole"
+                    style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background-color: var(--bg-input); color: var(--text-main);">
+                    <option value="admin">Admin</option>
+                    <option value="super_admin">Super Admin</option>
+                </select>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" onclick="closeCreateAdminModal()" class="btn"
+                    style="background-color: var(--bg-input); color: var(--text-main);">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Admin</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    async function loadAdmins() {
+        try {
+            const res = await fetch('/admin/api/admins', { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('Failed to load admins');
+            const data = await res.json();
+            renderAdmins(data.admins);
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Failed to load admins', 'error');
+        }
+    }
+
+    function renderAdmins(admins) {
+        const tbody = document.getElementById('adminsTableBody');
+        if (admins.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">No admins found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = admins.map(admin => `
+        <tr>
+            <td>${admin.id}</td>
+            <td><strong>${admin.username}</strong></td>
+            <td>${admin.full_name || 'N/A'}</td>
+            <td>${admin.email || 'N/A'}</td>
+            <td>
+                <span class="badge" style="background: ${admin.role === 'super_admin' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#667eea'}; color: white;">
+                    <i class="fas fa-${admin.role === 'super_admin' ? 'crown' : 'shield-alt'}"></i>
+                    ${admin.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                </span>
+            </td>
+            <td>${admin.last_login ? new Date(admin.last_login).toLocaleString() : 'Never'}</td>
+            <td>
+                <span class="badge ${admin.is_active ? 'badge-active' : 'badge-blocked'}">
+                    <i class="fas fa-${admin.is_active ? 'check-circle' : 'ban'}"></i>
+                    ${admin.is_active ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td>
+                <button class="action-btn" onclick="deleteAdmin(${admin.id}, '${admin.username}')" title="Delete Admin" style="color: var(--danger-color);">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    }
+
+    function showCreateAdminModal() {
+        document.getElementById('createAdminModal').style.display = 'block';
+    }
+
+    function closeCreateAdminModal() {
+        document.getElementById('createAdminModal').style.display = 'none';
+        document.getElementById('createAdminForm').reset();
+    }
+
+    async function createAdmin(event) {
+        event.preventDefault();
+        const data = {
+            username: document.getElementById('newUsername').value,
+            password: document.getElementById('newPassword').value,
+            full_name: document.getElementById('newFullName').value || null,
+            email: document.getElementById('newEmail').value || null,
+            role: document.getElementById('newRole').value
+        };
+
+        try {
+            const res = await fetch('/admin/api/admins', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify(data)
+            });
+
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.detail || 'Failed to create admin');
+            }
+
+            showNotification('Admin created successfully!', 'success');
+            closeCreateAdminModal();
+            loadAdmins();
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification(error.message, 'error');
+        }
+    }
+
+    async function deleteAdmin(adminId, username) {
+        if (!confirm(`Are you sure you want to delete admin "${username}"?`)) return;
+
+        try {
+            const res = await fetch(`/admin/api/admins/${adminId}`, {
+                method: 'DELETE',
+                credentials: 'same-origin'
+            });
+
+            if (!res.ok) throw new Error('Failed to delete admin');
+
+            showNotification('Admin deleted successfully!', 'success');
+            loadAdmins();
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Failed to delete admin', 'error');
+        }
+    }
+
+    // Close modal on outside click
+    window.onclick = function (event) {
+        const modal = document.getElementById('createAdminModal');
+        if (event.target == modal) {
+            closeCreateAdminModal();
+        }
+    }
+
+    loadAdmins();
+</script>
+{% endblock %}

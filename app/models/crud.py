@@ -221,7 +221,8 @@ async def create_file(db: AsyncSession, file_id: str, title: str,
                      file_type: str = "regular", type: str = "document",
                      level: str = None, tags: str = None,
                      description: str = None, thumbnail_id: str = None,
-                     file_name: str = None, processed_file_id: str = None) -> File:
+                     file_name: str = None, processed_file_id: str = None,
+                     file_size: int = None) -> File:
     """Create new file"""
     db_file = File(
         file_id=file_id,
@@ -233,7 +234,8 @@ async def create_file(db: AsyncSession, file_id: str, title: str,
         description=description,
         thumbnail_id=thumbnail_id,
         file_name=file_name,
-        processed_file_id=processed_file_id
+        processed_file_id=processed_file_id,
+        file_size=file_size
     )
     db.add(db_file)
     await db.commit()

@@ -184,6 +184,16 @@ async def receive_tags(message: Message, state: FSMContext, lang: str, db: Async
                 except:
                     pass
         
+        # Get file size from Telegram
+        file_size = None
+        if _bot_instance:
+            try:
+                file_info = await _bot_instance.get_file(data["file_id"])
+                if file_info and file_info.file_size:
+                    file_size = file_info.file_size
+            except Exception as size_error:
+                logger.warning(f"Could not get file size: {size_error}")
+        
         # Create file in database
         file = await create_file(
             db,
@@ -196,7 +206,8 @@ async def receive_tags(message: Message, state: FSMContext, lang: str, db: Async
             description=data.get("description"),
             thumbnail_id=None, # Thumbnail removed
             file_name=data.get("file_name"),
-            processed_file_id=processed_file_id
+            processed_file_id=processed_file_id,
+            file_size=file_size
         )
         
         # Send success message

@@ -31,8 +31,9 @@ async def get_files(
     db: AsyncSession = Depends(get_db),
     token: dict = Depends(verify_token)
 ):
-    """Get files list with optional filtering and search (optimized - removed Telegram API calls)"""
+    """Get files list with optional filtering and search"""
     from app.models.crud import get_all_files, get_files_count, search_files
+    from app.bot.helpers import format_file_size
     
     if search:
         files = await search_files(db, query=search, file_type=file_type, skip=skip, limit=limit)
@@ -41,12 +42,14 @@ async def get_files(
         files = await get_all_files(db, file_type=file_type, skip=skip, limit=limit)
         total = await get_files_count(db, file_type=file_type)
     
-    # Optimized: No Telegram API calls - much faster!
+    # Return file data with size from database
     files_data = [
         {
             "id": f.id,
             "title": f.title,
             "file_type": f.file_type,
+            "file_size": f.file_size or 0,
+            "file_size_formatted": format_file_size(f.file_size) if f.file_size else "Unknown",
             "downloads_count": f.downloads_count,
             "created_at": f.created_at.isoformat()
         }

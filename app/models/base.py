@@ -42,6 +42,7 @@ class File(Base):
     description = Column(Text, nullable=True)
     thumbnail_id = Column(String, nullable=True) # Telegram file_id for thumbnail
     processed_file_id = Column(String, nullable=True) # Pre-processed file with thumbnail and renamed
+    file_size = Column(BigInteger, nullable=True)  # File size in bytes
     created_at = Column(DateTime, default=datetime.utcnow)
     downloads_count = Column(Integer, default=0)
 

@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import auth, dashboard, files, users_api, fsub, admin_settings
+from app.api.routes import auth, dashboard, files, users_api, fsub, admin_settings, admins, admin_logs
 from app.bot.webhook import router as webhook_router, set_dispatcher, set_bot
 from app.core.config import settings
 
@@ -44,6 +44,8 @@ app.include_router(files.router, prefix="/admin", tags=["files"])
 app.include_router(users_api.router, prefix="/admin", tags=["users"])
 app.include_router(fsub.router, prefix="/admin", tags=["fsub"])
 app.include_router(admin_settings.router, prefix="/admin", tags=["settings"])
+app.include_router(admins.router, prefix="/admin", tags=["admins"])  # NEW: Admin management
+app.include_router(admin_logs.router, prefix="/admin", tags=["logs"])  # NEW: Audit logs
 
 # Include webhook router (for Telegram webhook mode)
 app.include_router(webhook_router, tags=["webhook"])

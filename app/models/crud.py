@@ -629,16 +629,22 @@ async def get_users_left_stats(db: AsyncSession) -> Dict[str, int]:
 
 
 async def get_total_files_volume(db: AsyncSession) -> Dict[str, Any]:
-    """Get total files count (optimized - removed slow Telegram API calls)"""
+    """Get total files volume from database (sum of all file_size)"""
     try:
-        # Just count files - much faster than fetching size for each file
-        files_count = await get_files_count(db)
+        # Sum all file sizes from database
+        from sqlalchemy import func
+        query = select(func.sum(File.file_size))
+        result = await db.execute(query)
+        total_bytes = result.scalar() or 0
+        
+        # Format bytes
+        from app.bot.helpers import format_file_size
         return {
-            "total_files": files_count,
-            "formatted": f"{files_count} files"
+            "total_bytes": total_bytes,
+            "formatted": format_file_size(total_bytes)
         }
     except Exception:
-        return {"total_files": 0, "formatted": "0 files"}
+        return {"total_bytes": 0, "formatted": "0 B"}
 
 
 async def get_downloads_by_period(db: AsyncSession) -> Dict[str, List[Dict[str, Any]]]:

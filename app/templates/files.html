@@ -133,7 +133,7 @@
                     ${new Date(file.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                 </td>
                 <td class="text-center">
-                    <button class="action-btn" onclick="deleteFile(${file.id})" title="Delete File">
+                    <button class="action-btn" onclick="deleteFile('${file.id}')" title="Delete File">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </td>

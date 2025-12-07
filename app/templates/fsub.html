@@ -120,7 +120,7 @@
                 <td>${channel.invite_link ? `<a href="${channel.invite_link}" target="_blank">Link</a>` : 'N/A'}</td>
                 <td><span class="badge badge-success">Active</span></td>
                 <td>
-                    <button class="action-btn" onclick="removeChannel(${channel.channel_id})" title="Remove Channel" style="color: #ef4444;">
+                    <button class="action-btn" onclick="removeChannel('${channel.channel_id}')" title="Remove Channel" style="color: #ef4444;">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>

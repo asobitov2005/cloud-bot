@@ -150,21 +150,24 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .content-header h1 {
     font-size: 1.875rem;
     font-weight: 700;
     color: var(--text-main);
+    margin: 0;
 }
 
-/* Theme Toggle */
+/* Theme Toggle - integrated into content header */
 .theme-toggle {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     color: var(--text-main);
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -172,6 +175,7 @@ body {
     cursor: pointer;
     transition: var(--transition);
     box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
 }
 
 .theme-toggle:hover {

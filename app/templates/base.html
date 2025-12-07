@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block page_title %}PrimeLingo Admin{% endblock %}</title>
 
+    <!-- Load theme IMMEDIATELY to prevent flash -->
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,13 +82,6 @@
 
         <!-- Main content with smooth transitions -->
         <main class="main-content" id="mainContent">
-            <!-- Top Bar for Mobile & Theme Toggle -->
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem; gap: 1rem;">
-                <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
-                    <i class="fas fa-moon"></i>
-                </button>
-            </div>
-
             {% block content %}{% endblock %}
         </main>
     </div>

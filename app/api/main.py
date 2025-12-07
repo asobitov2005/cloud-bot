@@ -69,3 +69,26 @@ if __name__ == "__main__":
         port=settings.ADMIN_PANEL_PORT,
         reload=settings.DEBUG
     )
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize bot on startup"""
+    from app.bot import init_bot
+    from app.bot.main import set_bot_instance
+    
+    # Initialize bot
+    bot, _ = init_bot()
+    
+    # Store bot instance for API access
+    set_bot_instance(bot)
+    
+    # Store in app state
+    app.state.bot = bot
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Close bot session on shutdown"""
+    if hasattr(app.state, "bot"):
+        await app.state.bot.session.close()

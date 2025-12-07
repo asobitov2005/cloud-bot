@@ -89,23 +89,7 @@
         }
     }
 
-    function getFileIcon(filename, type) {
-        const ext = filename ? filename.split('.').pop().toLowerCase() : '';
 
-        if (type === 'audio' || ['mp3', 'wav', 'ogg'].includes(ext)) {
-            return '<div class="file-icon icon-audio"><i class="fas fa-music"></i></div>';
-        } else if (type === 'video' || ['mp4', 'mov', 'avi'].includes(ext)) {
-            return '<div class="file-icon icon-video"><i class="fas fa-video"></i></div>';
-        } else if (type === 'image' || ['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
-            return '<div class="file-icon icon-img"><i class="fas fa-image"></i></div>';
-        } else if (['pdf'].includes(ext)) {
-            return '<div class="file-icon icon-pdf"><i class="fas fa-file-pdf"></i></div>';
-        } else if (['doc', 'docx', 'txt'].includes(ext)) {
-            return '<div class="file-icon icon-doc"><i class="fas fa-file-alt"></i></div>';
-        } else {
-            return '<div class="file-icon icon-other"><i class="fas fa-file"></i></div>';
-        }
-    }
 
     function renderFiles(files) {
         const tbody = document.getElementById('filesTableBody');
@@ -132,7 +116,7 @@
                 <td style="color: var(--text-muted); font-family: monospace;">#${file.id}</td>
                 <td>
                     <div class="file-title-cell">
-                        ${getFileIcon(file.title, file.file_type)}
+
                         <span>${file.title}</span>
                     </div>
                 </td>

@@ -47,6 +47,7 @@ class FSubCheckMiddleware(BaseMiddleware):
             # Check if user is admin - admins bypass fsub check
             db_user = data.get("db_user")
             if db_user and db_user.is_admin:
+                logger.debug(f"User {user.id} is admin - bypassing fsub check")
                 return await handler(event, data)
             
             # Get force subscribe channels
